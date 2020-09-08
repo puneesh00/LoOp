@@ -16,7 +16,7 @@ import datetime
 import csv
 import os
 
-from .embedding_aug import get_embedding_aug
+from .embedding_aug_mx import get_embedding_aug, get_opt_emb_dis
 
 def euclidean_dist(F, x, y, clip_min=1e-12, clip_max=1e12):
     m, n = x.shape[0], y.shape[0]
@@ -45,13 +45,19 @@ class HPHNTripletLoss(mx.gluon.loss.Loss):
         total_start_time = time.time()
         gen_time = 0
         self.batch_size = embeddings.shape[0]
+        '''
         if self.n_inner_pts != 0:
             gen_start_time = time.time()
             embeddings, labels = get_embedding_aug(F, embeddings, labels, self.num_instance, self.n_inner_pts, self.l2_norm)
+            #dis_ap, dis_an = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm)
             gen_time = time.time() - gen_start_time
         dist_mat = euclidean_dist(F, embeddings, embeddings)
         dist_ap, dist_an = self.hard_example_mining(F, dist_mat, labels)
-
+        '''
+        gen_start_time = time.time()
+        dist_ap, dist_an = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm)
+        gen_time = time.time() - gen_start_time
+        
         if self.soft_margin:
             loss = F.log(1 + F.exp(dist_ap - dist_an))
         else:

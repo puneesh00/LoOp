@@ -16,6 +16,7 @@ import sys
 import random
 import argparse
 
+#os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
 import dataset as D
 import transforms as T
 from model import Model
