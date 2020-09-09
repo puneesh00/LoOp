@@ -2,10 +2,10 @@ import numpy as np
 import mxnet.ndarray as mxn
 
 def normalize(X1, X2, X3, X4):
-    X1 = X1/mxn.sqrt(mxn.sum(mxn.square(X1), axis = 0)+1e-20)
-    X2 = X2/mxn.sqrt(mxn.sum(mxn.square(X2), axis = 0)+1e-20)
-    X3 = X3/mxn.sqrt(mxn.sum(mxn.square(X3), axis = 0)+1e-20)
-    X4 = X4/mxn.sqrt(mxn.sum(mxn.square(X4), axis = 0)+1e-20)
+    X1 = X1/mxn.sqrt(mxn.sum(mxn.square(X1), axis = 0) + (mxn.sum(mxn.square(X1), axis = 0)==0)*1e-20)
+    X2 = X2/mxn.sqrt(mxn.sum(mxn.square(X2), axis = 0) + (mxn.sum(mxn.square(X2), axis = 0)==0)*1e-20)
+    X3 = X3/mxn.sqrt(mxn.sum(mxn.square(X3), axis = 0) + (mxn.sum(mxn.square(X3), axis = 0)==0)*1e-20)
+    X4 = X4/mxn.sqrt(mxn.sum(mxn.square(X4), axis = 0) + (mxn.sum(mxn.square(X4), axis = 0)==0)*1e-20)
     return X1, X2, X3, X4
 
 def getn(X1, X2):
@@ -13,7 +13,7 @@ def getn(X1, X2):
     dotp = X1*(mxn.sum(X1*X2, axis = 0))
     #dotp  = X1*np.einsum('ij,ij->j', X1, X2)
     N2 = X2 - dotp
-    N2 = N2/mxn.sqrt(mxn.sum(N2*N2, axis = 0)+1e-20)
+    N2 = N2/mxn.sqrt(mxn.sum(N2*N2, axis = 0) + (mxn.sum(N2*N2, axis = 0)==0)*1e-20)
     #N2 = N2/np.sqrt(np.einsum('ij, ij->j', N2, N2))
     return N1, N2
 
@@ -178,7 +178,8 @@ def opt_pts_rot(X1, X2, X3, X4,batch,dim):
 
     a0 = mxn.arccos(mxn.sum(X1*X2, axis = 0))
     b0 = mxn.arccos(mxn.sum(X3*X4, axis = 0))
-    #print(a0,b0)
+    print(a0)
+    print(b0)
 
     A = -mxn.sum(N2*N4, axis = 0)
     B = -mxn.sum(N1*N4, axis = 0)
