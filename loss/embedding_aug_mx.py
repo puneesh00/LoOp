@@ -84,14 +84,17 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     X2=embeddings[1:batch_size:2]
     X1l=labels[0:batch_size:2]
     X2l=labels[1:batch_size:2]
-
+    
     sim=F.arccos(F.sum(X1*X2, axis = 1))
     ind=[i for i in range(sim.shape[0]) if sim[i]>1e-5]
     X1=X1[ind]
     X2=X2[ind]
     X1l=X1l[ind]
     X2l=X2l[ind]
+
     labels = X1l
+
+
     X1n=X1 #F.L2Normalization(X1)
     X2n=X2 #F.L2Normalization(X2)
     dis_ap=F.sqrt(F.sum((X1n-X2n)*(X1n-X2n), axis=1)+1e-20)
