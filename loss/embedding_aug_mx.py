@@ -42,6 +42,21 @@ def concat(X1,X2,X1l,X2l):
 
     ind1=[i for i in range(n-1) for i in range(n-1-i)]
     ind2=[i+n for i in range(n-1) for i in range(-(n-1-i),0)]
+    #print(ind1)
+    #print(ind2)
+    #print(X1l)
+    #print(X1l[ind1])
+    #print(X1l[ind2])
+    
+    X3=X1[ind2]
+    X3l=X1l[ind2]
+    X1=X1[ind1]
+    X1l=X1l[ind1]
+    X4=X2[ind2]
+    X4l=X2l[ind2]
+    X2=X2[ind1]
+    X2l=X2l[ind1]
+    '''
 
     X1=X1[ind1]
     X1l=X1l[ind1]
@@ -51,6 +66,7 @@ def concat(X1,X2,X1l,X2l):
     X2l=X2l[ind1]
     X4=X2[ind2]
     X4l=X2l[ind2]
+    '''
     return X1,X2,X3,X4,X1l,X2l,X3l,X4l
 
 def get_min_dis(F, dis,label,a1l,a2l):
@@ -85,27 +101,29 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     X1l=labels[0:batch_size:2]
     X2l=labels[1:batch_size:2]
     
+    #print(labels)
     sim=F.arccos(F.sum(X1*X2, axis = 1))
     ind=[i for i in range(sim.shape[0]) if sim[i]>1e-5]
-    X1=X1[ind]
-    X2=X2[ind]
-    X1l=X1l[ind]
-    X2l=X2l[ind]
-
+    
+    if len(ind)>1:
+      X1=X1[ind]
+      X2=X2[ind]
+      X1l=X1l[ind]
+      X2l=X2l[ind]
+      
+    X1n=X1 
+    X2n=X2 
     labels = X1l
-
-
-    X1n=X1 #F.L2Normalization(X1)
-    X2n=X2 #F.L2Normalization(X2)
-    dis_ap=F.sqrt(F.sum((X1n-X2n)*(X1n-X2n), axis=1)+1e-20)
-
     X1, X2, X3, X4, X1l, X2l, X3l, X4l = concat(X1,X2,X1l,X2l)
-    batch_size=X1.shape[0]
-    #dis=opt_pts_rot(np.transpose(X1,[1,0]),np.transpose(X2,[1,0]),np.transpose(X3,[1,0]),np.transpose(X4,[1,0]),batch_size//2,dim)
-    #dis=opt_pts_rot(np.transpose(np.squeeze(np.asarray(X1.as_np_ndarray(),dtype='float32'))),np.transpose(np.squeeze(np.asarray(X2.as_np_ndarray(),dtype='float32'))),np.transpose(np.squeeze(np.asarray(X3.as_np_ndarray(),dtype='float32'))),np.transpose(np.squeeze(np.asarray(X4.as_np_ndarray(),dtype='float32'))),batch_size,dim)
-    dis = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), batch_size, dim)
-    #dis=mx.nd.array(np.squeeze(np.asarray(dis)))
-
+    
+    if len(ind)>1:
+      batch_size = X1.shape[0]
+      dis = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), batch_size, dim)   
+      
+    else:
+      dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)
+      
+    dis_ap = F.sqrt(F.sum((X1n-X2n)*(X1n-X2n), axis=1)+1e-20)
     dis_an = get_min_dis(F, dis,labels,X1l,X3l)
-
+      
     return dis_ap, dis_an

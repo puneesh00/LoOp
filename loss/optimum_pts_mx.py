@@ -178,8 +178,8 @@ def opt_pts_rot(X1, X2, X3, X4,batch,dim):
 
     a0 = mxn.arccos(mxn.sum(X1*X2, axis = 0))
     b0 = mxn.arccos(mxn.sum(X3*X4, axis = 0))
-    print(a0)
-    print(b0)
+    #print(a0)
+    #print(b0)
 
     A = -mxn.sum(N2*N4, axis = 0)
     B = -mxn.sum(N1*N4, axis = 0)
@@ -199,12 +199,12 @@ def opt_pts_rot(X1, X2, X3, X4,batch,dim):
 
     P1 = mxn.concat(P1, mxn.expand_dims(point_rot(N1, N2, ra1),axis=0),dim=0)
     P2 = mxn.concat(P2, mxn.expand_dims(point_rot(N3, N4, rb1),axis=0),dim=0)
-    y = 1.0*(ra1<=0)*(rb1<=b0)
+    y = 1.0*(ra1<=a0)*(rb1<=b0)
     Y = mxn.concat(Y,mxn.expand_dims(y,axis=0),dim=0)
 
     P1 = mxn.concat(P1, mxn.expand_dims(point_rot(N1, N2, ra2),axis=0),dim=0)
     P2 = mxn.concat(P2, mxn.expand_dims(point_rot(N3, N4, rb2),axis=0),dim=0)
-    y = 1.0*(ra2<=0)*(rb2<=b0)
+    y = 1.0*(ra2<=a0)*(rb2<=b0)
     Y = mxn.concat(Y,mxn.expand_dims(y,axis=0),dim=0)
     #print(Y)
 
