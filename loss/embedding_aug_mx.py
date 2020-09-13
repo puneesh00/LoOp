@@ -42,11 +42,6 @@ def concat(X1,X2,X1l,X2l):
 
     ind1=[i for i in range(n-1) for i in range(n-1-i)]
     ind2=[i+n for i in range(n-1) for i in range(-(n-1-i),0)]
-    #print(ind1)
-    #print(ind2)
-    #print(X1l)
-    #print(X1l[ind1])
-    #print(X1l[ind2])
     
     X3=X1[ind2]
     X3l=X1l[ind2]
@@ -56,22 +51,29 @@ def concat(X1,X2,X1l,X2l):
     X4l=X2l[ind2]
     X2=X2[ind1]
     X2l=X2l[ind1]
-    '''
-
-    X1=X1[ind1]
-    X1l=X1l[ind1]
-    X3=X1[ind2]
-    X3l=X1l[ind2]
-    X2=X2[ind1]
-    X2l=X2l[ind1]
-    X4=X2[ind2]
-    X4l=X2l[ind2]
-    '''
+    
+    print(X1l)
+    print(X3l)
+    
+    ind=[i for i in range(len(X1l)) if X1l[i]!=X3l[i]]
+    X1=X1[ind]
+    X1l=X1l[ind]
+    X2=X2[ind]
+    X2l=X2l[ind]
+    X3=X3[ind]
+    X3l=X3l[ind]
+    X4=X4[ind]
+    X4l=X4l[ind]
+    
+    print(X1l)
+    print(X3l)
+    
     return X1,X2,X3,X4,X1l,X2l,X3l,X4l
 
 def get_min_dis(F, dis,label,a1l,a2l):
     #min_dis=mxn.zeros(label.shape)
     for l in range(label.shape[0]):
+      '''  
       if l==0:
         id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
         #print('id1',id1)
@@ -83,11 +85,24 @@ def get_min_dis(F, dis,label,a1l,a2l):
         min_dis=F.concat(min_dis,F.min(dis[id2]),dim=0)
 
       else:
-        id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
-        #print('id1',id1)
-        id2=[i for i in range(a2l.shape[0]) if a2l[i]==label[l] ]
-        #print('id2',id2)
-        min_dis=F.concat(min_dis, F.min(F.concat(F.min(dis[id1]), F.min(dis[id2]), dim=0)), dim=0)
+      '''
+      id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
+      #print('id1',id1)
+      id2=[i for i in range(a2l.shape[0]) if a2l[i]==label[l] ]
+      #print('id2',id2)
+    
+      if len(id1)<1:
+        min_dist=F.min(dis[id2])
+      elif len(id2)<1:
+        min_dist=F.min(dis[id1])
+      else:
+        min_dist=F.min(F.concat(F.min(dis[id1]), F.min(dis[id2]), dim=0))
+        
+      if l==0:
+        min_dis=min_dist
+      else:
+        min_dis=F.concat(min_dis,min_dist),dim=0)
+        
     return min_dis
 
 def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
