@@ -128,7 +128,8 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
       
     X1n=X1 
     X2n=X2 
-    labels = X1l
+    #labels = X1l
+    labels=labels[0:batch_size:num_instance]
     X1, X2, X3, X4, X1l, X2l, X3l, X4l = concat(X1,X2,X1l,X2l)
     
     if len(ind)>1:
