@@ -112,9 +112,9 @@ def get_max_dis(F, dis,label,a1l):
       id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
       
       if l==0:
-        min_dis=F.min(dis[id1])
+        min_dis=F.max(dis[id1])
       else:
-        min_dis=F.concat(min_dis,F.min(dis[id1]),dim=0)
+        min_dis=F.concat(min_dis,F.max(dis[id1]),dim=0)
         
     return min_dis
 
