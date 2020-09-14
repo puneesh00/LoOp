@@ -101,7 +101,7 @@ def get_min_dis(F, dis,label,a1l,a2l):
       if l==0:
         min_dis=min_dist
       else:
-        min_dis=F.concat(min_dis,min_dist),dim=0)
+        min_dis=F.concat(min_dis,min_dist,dim=0)
         
     return min_dis
 
