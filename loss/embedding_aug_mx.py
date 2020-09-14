@@ -126,9 +126,11 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
       X1l=X1l[ind]
       X2l=X2l[ind]
       
-    X1n=X1 
-    X2n=X2 
-    #labels = X1l
+    #X1n=X1 
+    #X2n=X2 
+    disp=F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
+    X1nl=X1l
+    X2nl=X2l
     labels=labels[0:batch_size:num_instance]
     X1, X2, X3, X4, X1l, X2l, X3l, X4l = concat(X1,X2,X1l,X2l)
     
@@ -139,7 +141,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     else:
       dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)
       
-    dis_ap = F.sqrt(F.sum((X1n-X2n)*(X1n-X2n), axis=1)+1e-20)
+    dis_ap = get_min_dis(F, disp,labels,X1nl,X2nl)
     dis_an = get_min_dis(F, dis,labels,X1l,X3l)
       
     return dis_ap, dis_an
