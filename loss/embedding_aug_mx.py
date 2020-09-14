@@ -52,8 +52,8 @@ def concat(X1,X2,X1l,X2l):
     X2=X2[ind1]
     X2l=X2l[ind1]
     
-    print(X1l)
-    print(X3l)
+    #print(X1l)
+    #print(X3l)
     
     ind=[i for i in range(len(X1l)) if X1l[i]!=X3l[i]]
     X1=X1[ind]
@@ -65,8 +65,8 @@ def concat(X1,X2,X1l,X2l):
     X4=X4[ind]
     X4l=X4l[ind]
     
-    print(X1l)
-    print(X3l)
+    #print(X1l)
+    #print(X3l)
     
     return X1,X2,X3,X4,X1l,X2l,X3l,X4l
 
