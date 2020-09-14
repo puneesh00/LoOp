@@ -104,6 +104,19 @@ def get_min_dis(F, dis,label,a1l,a2l):
         min_dis=F.concat(min_dis,min_dist,dim=0)
         
     return min_dis
+    
+def get_max_dis(F, dis,label,a1l):
+    #min_dis=mxn.zeros(label.shape)
+    for l in range(label.shape[0]):
+      
+      id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
+      
+      if l==0:
+        min_dis=F.min(dis[id1])
+      else:
+        min_dis=F.concat(min_dis,F.min(dis[id1]),dim=0)
+        
+    return min_dis
 
 def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     batch_size = embeddings.shape[0]
@@ -115,7 +128,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     X2=embeddings[1:batch_size:2]
     X1l=labels[0:batch_size:2]
     X2l=labels[1:batch_size:2]
-    
+   
     #print(labels)
     sim=F.arccos(F.sum(X1*X2, axis = 1))
     ind=[i for i in range(sim.shape[0]) if sim[i]>1e-5]
@@ -130,7 +143,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     #X2n=X2 
     disp=F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
     X1nl=X1l
-    X2nl=X2l
+    #X2nl=X2l
     labels=labels[0:batch_size:num_instance]
     X1, X2, X3, X4, X1l, X2l, X3l, X4l = concat(X1,X2,X1l,X2l)
     
@@ -140,8 +153,10 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
       
     else:
       dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)
+      print(F.min(X1))
+      print(F.min(X2))
       
-    dis_ap = get_min_dis(F, disp,labels,X1nl,X2nl)
+    dis_ap = get_max_dis(F, disp,labels,X1nl)
     dis_an = get_min_dis(F, dis,labels,X1l,X3l)
       
     return dis_ap, dis_an

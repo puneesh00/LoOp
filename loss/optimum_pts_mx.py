@@ -178,8 +178,8 @@ def opt_pts_rot(X1, X2, X3, X4,batch,dim):
 
     a0 = mxn.arccos(mxn.sum(X1*X2, axis = 0))
     b0 = mxn.arccos(mxn.sum(X3*X4, axis = 0))
-    #print(a0)
-    #print(b0)
+    #print(mxn.min(a0))
+    #print(mxn.min(b0))
 
     A = -mxn.sum(N2*N4, axis = 0)
     B = -mxn.sum(N1*N4, axis = 0)
