@@ -72,49 +72,42 @@ def concat(X1,X2,X1l,X2l):
 
 def get_min_dis(F, dis,label,a1l,a2l):
     #min_dis=mxn.zeros(label.shape)
+    k=0
     for l in range(label.shape[0]):
-      '''  
-      if l==0:
-        id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
-        #print('id1',id1)
-        min_dis=F.min(dis[id1])
-
-      elif l==label.shape[0]-1:
-        id2=[i for i in range(a2l.shape[0]) if a2l[i]==label[l] ]
-        #print('id2',id2)
-        min_dis=F.concat(min_dis,F.min(dis[id2]),dim=0)
-
-      else:
-      '''
+      
       id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
       #print('id1',id1)
       id2=[i for i in range(a2l.shape[0]) if a2l[i]==label[l] ]
       #print('id2',id2)
-    
-      if len(id1)<1:
-        min_dist=F.min(dis[id2])
-      elif len(id2)<1:
-        min_dist=F.min(dis[id1])
-      else:
-        min_dist=F.min(F.concat(F.min(dis[id1]), F.min(dis[id2]), dim=0))
+      if len(id1)>0 or len(id2)>0:
+        if len(id1)<1:
+          min_dist=F.min(dis[id2])
+        elif len(id2)<1:
+          min_dist=F.min(dis[id1])
+        else:
+          min_dist=F.min(F.concat(F.min(dis[id1]), F.min(dis[id2]), dim=0))
         
-      if l==0:
-        min_dis=min_dist
-      else:
-        min_dis=F.concat(min_dis,min_dist,dim=0)
+        if k==0:
+          k=k+1
+          min_dis=min_dist
+        else:
+          min_dis=F.concat(min_dis,min_dist,dim=0)
         
     return min_dis
     
 def get_max_dis(F, dis,label,a1l):
     #min_dis=mxn.zeros(label.shape)
+    k=0
     for l in range(label.shape[0]):
       
       id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
       
-      if l==0:
-        min_dis=F.max(dis[id1])
-      else:
-        min_dis=F.concat(min_dis,F.max(dis[id1]),dim=0)
+      if len(id1)>0:
+        if k==0:
+          k=k+1
+          min_dis=F.max(dis[id1])
+        else:
+          min_dis=F.concat(min_dis,F.max(dis[id1]),dim=0)
         
     return min_dis
 
@@ -133,7 +126,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     sim=F.arccos(F.sum(X1*X2, axis = 1))
     ind=[i for i in range(sim.shape[0]) if sim[i]>1e-5]
     
-    if len(ind)>1:
+    if len(ind)>num_instance//2:
       X1=X1[ind]
       X2=X2[ind]
       X1l=X1l[ind]
@@ -147,7 +140,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     labels=labels[0:batch_size:num_instance]
     X1, X2, X3, X4, X1l, X2l, X3l, X4l = concat(X1,X2,X1l,X2l)
     
-    if len(ind)>1:
+    if len(ind)>num_instance//2:
       batch_size = X1.shape[0]
       dis = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), batch_size, dim)   
       

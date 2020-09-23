@@ -18,7 +18,7 @@ def getn(X1, X2):
     return N1, N2
 
 def get_roots(A, B, C, D):
-    alpha = (A*A - B*B + C*C - D*D)/(A*B + C*D+ (mxn.abs(A*B+C*D)<1e-10)*1e-10*(mxn.sign(A*B+C*D)))
+    alpha = (A*A - B*B + C*C - D*D)/(A*B + C*D+ (mxn.abs(A*B+C*D)<1e-10)*1e-10*(mxn.sign(A*B+C*D)) + ((A*B + C*D)==0)*1e-10)
     ta1 = (alpha+mxn.sqrt(alpha*alpha+4))/2
     ta2 = (alpha-mxn.sqrt(alpha*alpha+4))/2
     ra1 = mxn.arctan(ta1)
@@ -30,7 +30,7 @@ def get_lam_rot(A,B,C,D,alpha,beta):
 
 def solver_rot(A,B,C,D,alpha,beta0,flag=1):
 
-  tb = (A*mxn.sin(alpha) + B*mxn.cos(alpha))/(C*mxn.sin(alpha) + D*mxn.cos(alpha)+ (mxn.abs(C*mxn.sin(alpha) + D*mxn.cos(alpha))<1e-10)*1e-10*(mxn.sign(C*mxn.sin(alpha) + D*mxn.cos(alpha))))
+  tb = (A*mxn.sin(alpha) + B*mxn.cos(alpha))/(C*mxn.sin(alpha) + D*mxn.cos(alpha) + ((C*mxn.sin(alpha) + D*mxn.cos(alpha))==0)*1e-10 + (mxn.abs(C*mxn.sin(alpha) + D*mxn.cos(alpha))<1e-10)*1e-10*(mxn.sign(C*mxn.sin(alpha) + D*mxn.cos(alpha))))
   beta=mxn.arctan(tb)
   beta = beta + (beta<0)*3.14159265358979
   lam = get_lam_rot(A,B,C,D,alpha,beta)
@@ -191,10 +191,10 @@ def opt_pts_rot(X1, X2, X3, X4,batch,dim):
 
     ra1, ra2 = get_roots(A, B, C, D)
 
-    rb1 = mxn.arctan((A*mxn.sin(ra1) + B*mxn.cos(ra1))/(C*mxn.sin(ra1) + D*mxn.cos(ra1)+ (mxn.abs(C*mxn.sin(ra1) + D*mxn.cos(ra1))<1e-10)*1e-10*(mxn.sign(C*mxn.sin(ra1) + D*mxn.cos(ra1)))))
+    rb1 = mxn.arctan((A*mxn.sin(ra1) + B*mxn.cos(ra1))/(C*mxn.sin(ra1) + D*mxn.cos(ra1) + ((C*mxn.sin(ra1) + D*mxn.cos(ra1))==0)*1e-10 + (mxn.abs(C*mxn.sin(ra1) + D*mxn.cos(ra1))<1e-10)*1e-10*(mxn.sign(C*mxn.sin(ra1) + D*mxn.cos(ra1)))))
     rb1 = rb1 + (rb1<0)*3.14159265358979
 
-    rb2 = mxn.arctan((A*mxn.sin(ra2) + B*mxn.cos(ra2))/(C*mxn.sin(ra2) + D*mxn.cos(ra2)+ (mxn.abs(C*mxn.sin(ra2) + D*mxn.cos(ra2))<1e-10)*1e-10*(mxn.sign(C*mxn.sin(ra2) + D*mxn.cos(ra2)))))
+    rb2 = mxn.arctan((A*mxn.sin(ra2) + B*mxn.cos(ra2))/(C*mxn.sin(ra2) + D*mxn.cos(ra2) + ((C*mxn.sin(ra2) + D*mxn.cos(ra2))==0)*1e-10 + (mxn.abs(C*mxn.sin(ra2) + D*mxn.cos(ra2))<1e-10)*1e-10*(mxn.sign(C*mxn.sin(ra2) + D*mxn.cos(ra2)))))
     rb2 = rb2 + (rb2<0)*3.14159265358979
 
     P1 = mxn.concat(P1, mxn.expand_dims(point_rot(N1, N2, ra1),axis=0),dim=0)
