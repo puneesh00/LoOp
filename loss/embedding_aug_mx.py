@@ -183,7 +183,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     dis_ap1 = F.max(dis_pos, axis=1)
     
     num_pairs = N // 2
-    dis_ap1 = F.max(F.reshape(dis_ap1, (num_pairs,2),axis=1))
+    dis_ap1 = F.max(F.reshape(dis_ap1, (num_pairs,2)),axis=1)
     #dis_ap = get_max_dis(F, disp,labels,X1nl)
     dis_an = get_min_dis(F, dis, ids, a1l, a2l) #labels,X1l,X3l)
       
