@@ -121,33 +121,40 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     X2=embeddings[1:batch_size:2]
     X1l=labels[0:batch_size:2]
     X2l=labels[1:batch_size:2]
+    
+    labels=labels[0:batch_size:num_instance]
    
     #print(labels)
     sim=F.arccos(F.sum(X1*X2, axis = 1))
-    ind=[i for i in range(sim.shape[0]) if sim[i]>1e-5]
+    ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
+    indx=[]
     
-    if len(ind)>num_instance//2:
-      X1=X1[ind]
-      X2=X2[ind]
-      X1l=X1l[ind]
-      X2l=X2l[ind]
+    if len(ind)>1:
+      indx=[i for i in range(len(labels)) if labels[i] in X1l[ind]]
+      if len(indx)>1:
+        X1=X1[ind]
+        X2=X2[ind]
+        X1l=X1l[ind]
+        X2l=X2l[ind]
       
     #X1n=X1 
     #X2n=X2 
     disp=F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
     X1nl=X1l
     #X2nl=X2l
-    labels=labels[0:batch_size:num_instance]
+    
     X1, X2, X3, X4, X1l, X2l, X3l, X4l = concat(X1,X2,X1l,X2l)
     
-    if len(ind)>num_instance//2:
+    if len(indx)>1:
       batch_size = X1.shape[0]
-      dis = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), batch_size, dim)   
+      dis = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), batch_size, dim) 
+      #else:
+      #  dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)  
       
     else:
       dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)
-      print(F.min(X1))
-      print(F.min(X2))
+      #print(F.min(X1))
+      #print(F.min(X2))
       
     dis_ap = get_max_dis(F, disp,labels,X1nl)
     dis_an = get_min_dis(F, dis,labels,X1l,X3l)
