@@ -49,9 +49,9 @@ def get_embedding_aug(F, embeddings, labels, num_instance, n_inner_pts, l2_norm=
 
     return concat_embeddings, concat_labels
 
-def concat(X1,X2,X1l,X2l):
+def concat(F,X1,X2,X1l,X2l):
     n=X1.shape[0]
-    ids=[i for i in range(n)]
+    ids=F.array([i for i in range(n)])
 
     ind1=[i for i in range(n-1) for i in range(n-1-i)]
     ind2=[i+n for i in range(n-1) for i in range(-(n-1-i),0)]
@@ -161,7 +161,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     X1nl=X1l
     #X2nl=X2l
     
-    X1, X2, X3, X4, a1l, a2l, ids = concat(X1,X2,X1l,X2l)
+    X1, X2, X3, X4, a1l, a2l, ids = concat(F,X1,X2,X1l,X2l)
     
     if len(indx)>1:
       batch_size = X1.shape[0]
