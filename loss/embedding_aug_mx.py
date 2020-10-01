@@ -13,6 +13,18 @@ import numpy as np
 #import mxnet.ndarray as mxn
 from .optimum_pts_mx import *
 
+def euclidean_dist(F, x, y, clip_min=1e-12, clip_max=1e12):
+    m, n = x.shape[0], y.shape[0]
+
+    squared_x = F.power(x, 2).sum(axis=1, keepdims=True).broadcast_to((m, n))
+    squared_y = F.power(y, 2).sum(axis=1, keepdims=True).broadcast_to((n, m)).T
+
+    dist = squared_x + squared_y
+    dist = dist - 2 * F.dot(x, y.T)
+    dist = dist.clip(a_min=clip_min, a_max=clip_max).sqrt()
+
+    return dist
+
 def get_embedding_aug(F, embeddings, labels, num_instance, n_inner_pts, l2_norm=True):
     batch_size = embeddings.shape[0]
 
@@ -127,7 +139,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     X2=embeddings[1:batch_size:2]
     X1l=labels[0:batch_size:2]
     X2l=labels[1:batch_size:2]
-    
+    labelsorg = labels
     labels=labels[0:batch_size:num_instance]
    
     #print(labels)
@@ -161,8 +173,18 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
       dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)
       #print(F.min(X1))
       #print(F.min(X2))
-      
-    dis_ap = get_max_dis(F, disp,labels,X1nl)
+    dis_ap = euclidean_dist(F, embeddings, embeddings)
+    assert len(dis_ap.shape) == 2
+    assert dis_ap.shape[0] == dis_ap.shape[1]
+
+    N = dis_ap.shape[0]
+    is_pos = F.equal(labelsorg.broadcast_to((N, N)), labelsorg.broadcast_to((N, N)).T).astype('float32')
+    dis_pos = dis_ap * is_pos
+    dis_ap1 = F.max(dis_pos, axis=1)
+    
+    num_pairs = N // 2
+    dis1_ap = F.max(F.reshape(dis_ap1, (num_pairs,2),axis=1))
+    #dis_ap = get_max_dis(F, disp,labels,X1nl)
     dis_an = get_min_dis(F, dis, ids, a1l, a2l) #labels,X1l,X3l)
       
-    return dis_ap, dis_an
+    return dis_ap1, dis_an
