@@ -39,36 +39,42 @@ def get_embedding_aug(F, embeddings, labels, num_instance, n_inner_pts, l2_norm=
 
 def concat(X1,X2,X1l,X2l):
     n=X1.shape[0]
+    ids=[i for i in range(n)]
 
     ind1=[i for i in range(n-1) for i in range(n-1-i)]
     ind2=[i+n for i in range(n-1) for i in range(-(n-1-i),0)]
+    
+    a2l=ids[ind2]
+    a1l=ids[ind1]
     
     X3=X1[ind2]
     X3l=X1l[ind2]
     X1=X1[ind1]
     X1l=X1l[ind1]
     X4=X2[ind2]
-    X4l=X2l[ind2]
+    #X4l=X2l[ind2]
     X2=X2[ind1]
-    X2l=X2l[ind1]
+    #X2l=X2l[ind1]
     
     #print(X1l)
     #print(X3l)
     
     ind=[i for i in range(len(X1l)) if X1l[i]!=X3l[i]]
     X1=X1[ind]
-    X1l=X1l[ind]
+    #X1l=X1l[ind]
     X2=X2[ind]
-    X2l=X2l[ind]
+    #X2l=X2l[ind]
     X3=X3[ind]
-    X3l=X3l[ind]
+    #X3l=X3l[ind]
     X4=X4[ind]
-    X4l=X4l[ind]
+    #X4l=X4l[ind]
+    a1l=a1l[ind]
+    a2l=a2l[ind]
     
     #print(X1l)
     #print(X3l)
     
-    return X1,X2,X3,X4,X1l,X2l,X3l,X4l
+    return X1,X2,X3,X4,a1l,a2l,ids #X1l,X2l,X3l,X4l
 
 def get_min_dis(F, dis,label,a1l,a2l):
     #min_dis=mxn.zeros(label.shape)
@@ -143,7 +149,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     X1nl=X1l
     #X2nl=X2l
     
-    X1, X2, X3, X4, X1l, X2l, X3l, X4l = concat(X1,X2,X1l,X2l)
+    X1, X2, X3, X4, a1l, a2l, ids = concat(X1,X2,X1l,X2l)
     
     if len(indx)>1:
       batch_size = X1.shape[0]
@@ -157,6 +163,6 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
       #print(F.min(X2))
       
     dis_ap = get_max_dis(F, disp,labels,X1nl)
-    dis_an = get_min_dis(F, dis,labels,X1l,X3l)
+    dis_an = get_min_dis(F, dis, ids, a1l, a2l) #labels,X1l,X3l)
       
     return dis_ap, dis_an
