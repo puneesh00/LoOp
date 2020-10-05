@@ -109,7 +109,7 @@ def get_min_dis(F, dis,label,a1l,a2l):
                             
     return dis
     
-def get_sum_dis(F, dis,label,a1l,a2l):
+def get_sum_exp_dis(F, dis,label,a1l,a2l):
     k=0
     for l in range(label.shape[0]):
       id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
@@ -117,11 +117,11 @@ def get_sum_dis(F, dis,label,a1l,a2l):
       
       if len(id1)>0 or len(id2)>0:
         if len(id1)<1:
-          dist=F.sum(dis[id2])
+          dist=F.sum(F.exp(-dis[id2]))
         elif len(id2)<1:
-          dist=F.sum(dis[id1])
+          dist=F.sum(F.exp(-dis[id1]))
         else:
-          dist=F.sum(F.concat(F.sum(dis[id1]), F.sum(dis[id2]), dim=0))
+          dist=F.sum(F.concat(F.sum(F.exp(-dis[id1])), F.sum(F.exp(-dis[id2])), dim=0))
         
         if k==0:
           k=k+1
@@ -187,6 +187,6 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     print('dis_ap', dis_ap1)
     
     #dis_an = get_min_dis(F, dis, ids, a1l, a2l) #for hphn-triplet
-    #dis_an = get_sum_dis(F, dis, ids, a1l, a2l) #for lifted-struct
+    #dis_an = get_sum_exp_dis(F, dis, ids, a1l, a2l) #for lifted-struct
       
     return dis_ap1, dis, ids, a1l, a2l #dis_an
