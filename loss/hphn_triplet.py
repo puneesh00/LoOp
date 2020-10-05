@@ -51,12 +51,16 @@ class HPHNTripletLoss(mx.gluon.loss.Loss):
             embeddings, labels = get_embedding_aug(F, embeddings, labels, self.num_instance, self.n_inner_pts, self.l2_norm)
             #dis_ap, dis_an = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm)
             gen_time = time.time() - gen_start_time
-        dist_mat = euclidean_dist(F, embeddings, embeddings)
-        dist_ap, dist_an = self.hard_example_mining(F, dist_mat, labels)
         '''
+        #dist_mat = euclidean_dist(F, embeddings, embeddings)
+        #dist_apo, dist_ano = self.hard_example_mining(F, dist_mat, labels)
+        
         gen_start_time = time.time()
         dist_ap, dist_an = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm)
         gen_time = time.time() - gen_start_time
+        
+        #dist_ap=0.5*dist_apo+0.5*dist_ape
+        #dist_an=0.5*dist_ano+0.5*dist_ane
         
         if self.soft_margin:
             loss = F.log(1 + F.exp(dist_ap - dist_an))
@@ -76,16 +80,36 @@ class HPHNTripletLoss(mx.gluon.loss.Loss):
         is_neg = F.not_equal(labels.broadcast_to((N, N)), labels.broadcast_to((N, N)).T).astype('float32')
 
         dist_pos = dist_mat * is_pos
-        if self.n_inner_pts != 0:
-            dist_ap = F.max(dist_pos[:self.batch_size, :self.batch_size], axis=1)
-        else:
-            dist_ap = F.max(dist_pos, axis=1)
+        print(dist_pos[0,:])
+        #if self.n_inner_pts != 0:
+        #    dist_ap = F.max(dist_pos[:self.batch_size, :self.batch_size], axis=1)
+        #else:
+        dist_ap = F.max(dist_pos, axis=1)
+        t2 = dist_ap.reshape((N//2),2)
+        print(t2)
+        #print('t before', t)
+        k2 = F.equal(t2[:,0], t2[:,1]).astype('float32')
+        k2 = F.expand_dims(k2, axis = 1)
+        k2 = k2.repeat(repeats = 2, axis = 1)
+        t2 = t2 + k2*F.array([0.0,-1.0])
+        #print('t after', t)
+        dist_ap = F.max(t2, axis=1)
 
-        dist_neg = dist_mat * is_neg + F.max(dist_mat, axis=1, keepdims=True) * is_pos
+        dist_neg = dist_mat * is_neg + 1000*is_pos #F.max(dist_mat, axis=1, keepdims=True) * is_pos
+        print(dist_neg[0,:])
         dist_an = F.min(dist_neg, axis=1)
+        t1 = dist_an.reshape((N//2),2)
+        print(t1)
+        #print('t before', t)
+        k1 = F.equal(t1[:,0], t1[:,1]).astype('float32')
+        k1 = F.expand_dims(k1, axis = 1)
+        k1 = k1.repeat(repeats = 2, axis = 1)
+        t1 = t1 + k1*F.array([0.0,1.0])
+        #print('t after', t)
+        dist_an = F.min(t1, axis=1)
 
-        if self.n_inner_pts != 0:
-            num_group = N // self.batch_size
-            dist_an = F.min(F.reshape(dist_an, (num_group, self.batch_size)), axis=0) # include synthetic positives
+        #if self.n_inner_pts != 0:
+        #    num_group = N // self.batch_size
+        #    dist_an = F.min(F.reshape(dist_an, (num_group, self.batch_size)), axis=0) # include synthetic positives
 
         return dist_ap, dist_an
