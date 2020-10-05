@@ -109,7 +109,7 @@ class LiftedStructureLoss(mx.gluon.loss.Loss):
         dist_an = get_sum_exp_dis(F, dist_an, ids, a1l, a2l)
         gen_time = time.time() - gen_start_time
         
-        loss = F.relu(F.log(dist_an) + dist_ap + self.margin)
+        loss = F.relu(F.log(dist_an) + dist_ap + self.margin)**2
         
         total_time = time.time() - total_start_time
 
