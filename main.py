@@ -20,7 +20,7 @@ import argparse
 import dataset as D
 import transforms as T
 from model import Model
-from loss import HPHNTripletLoss
+from loss import HPHNTripletLoss, LiftedStructureLoss
 from runner import Trainer, Evaluator
 from util import SummaryWriter
 
@@ -160,7 +160,10 @@ def main():
     model.hybridize()
 
     # Load loss
-    loss = HPHNTripletLoss(margin=args.margin, soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.ee_l2norm)
+    if args.loss == 'hphn-triplet':
+      loss = HPHNTripletLoss(margin=args.margin, soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.ee_l2norm)
+    elif args.loss == 'lifted-structure':
+      loss = LiftedStructureLoss(margin=args.margin, soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.ee_l2norm)
 
     # Load logger and saver
     summary_writer = SummaryWriter(os.path.join(args.save_dir, 'tensorboard_log'))
