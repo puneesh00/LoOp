@@ -36,12 +36,6 @@ def solver_rot(A,B,C,D,alpha,beta0,flag=1):
   lam = get_lam_rot(A,B,C,D,alpha,beta)
 
   return beta, 1.0*(lam<=0)*(beta<=beta0)
-  '''
-  if beta<=beta0 and lam<=0:
-    return beta, np.ones(np.size(beta))
-  else:
-    return 1000, np.zeros(np.size(beta))
-  '''
 
 def point_rot(n1,n2,a):
   return n1*mxn.cos(a) + n2*mxn.sin(a)
@@ -58,117 +52,57 @@ def checker_rot(A,B,C,D,E,F,G,H,alpha,beta):
   lam2 = get_lam_rot(E,F,G,H,beta,alpha)
 
   return 1.0*(lam1<=0)*(lam2<=0)
-  '''
-  if lam1<=0 and lam2<=0:
-    return True
-  else:
-    return False
-  '''
+  
 def cases_rot(X1, X2, X3, X4, N1, N2, N3, N4, A, B, C, D, alpha0, beta0, batch, dim):
 
-      #P1 = mxn.zeros((10, dim,batch))
-      #P2 = mxn.zeros((10, dim,batch))
-      #Y = mxn.zeros((10, batch))
       '---CASE 1: g1 =0 (alpha =0), lam2 =0, lam3 =0, lam4 =0----'
       beta, y = solver_rot(A, B, C, D, mxn.array([0]), beta0,flag=0)
       P1 = mxn.expand_dims(X1,axis=0)
       P2 = mxn.expand_dims(point_rot(N3, N4, beta),axis=0)
       Y = mxn.expand_dims(y,axis=0)
-      #dist[0,:] = np.sum((P1-P2)*(P1-P2), axis = 0)*y + 1000*(1-y)
-      '''
-      if y:
-       p1=x1
-       p2=point_rot(n3,n4,beta)
-       print('yes1')
-       return p1,p2
-      '''
+      
       '---CASE 2: g2 = 0 (alpha =alpha0), lam1 =0, lam3 =0, lam4 =0----'
       beta, y = solver_rot(-A, -B, -C, -D, alpha0, beta0,flag=0)
       Y = mxn.concat(Y,mxn.expand_dims(y,axis=0),dim=0)
       P1 = mxn.concat(P1, mxn.expand_dims(X2,axis=0),dim=0)
       P2 = mxn.concat(P2, mxn.expand_dims(point_rot(N3, N4, beta),axis=0),dim=0)
-      #dist[1,:] = np.sum((P1-P2))
-      '''
-      if y:
-        p1=x2
-        p2=point_rot(n3,n4,beta)
-        print('yes2')
-        return p1,p2
-      '''
+      
       '---CASE 3: g3 = 0 (beta =0), lam1 =0, lam2 =0, lam4 =0----'
       alpha, y = solver_rot(A, C, B, D, mxn.array([0]), alpha0)
       Y = mxn.concat(Y,mxn.expand_dims(y,axis=0),dim=0)
       P1 = mxn.concat(P1, mxn.expand_dims(point_rot(N1, N2, alpha),axis=0),dim=0)
       P2 = mxn.concat(P2, mxn.expand_dims(X3,axis=0),dim=0)
-      '''
-      if y:
-        p2=x3
-        p1=point_rot(n1,n2,alpha)
-        print('yes3')
-        return p1,p2
-      '''
+      
       '---CASE 4: g4 = 0 (beta =beta0), lam1 =0, lam2 =0, lam3 =0----'
       alpha, y = solver_rot(-A, -C, -B, -D, beta0, alpha0)
       Y = mxn.concat(Y,mxn.expand_dims(y,axis=0),dim=0)
       P2 = mxn.concat(P2, mxn.expand_dims(X4,axis=0),dim=0)
       P1 = mxn.concat(P1, mxn.expand_dims(point_rot(N1, N2, alpha),axis=0),dim=0)
-      '''
-      if y:
-        p2=x4
-        p1=point_rot(n1,n2,alpha)
-        print('yes4')
-        return p1,p2
-      '''
+      
       '---CASE 5: g1 =0 (alpha =0), g3 = 0 (beta =0), lam2 =0, lam4 =0----'
       y = checker_rot(A, B, C, D, A, C, B, D, mxn.array([0]), mxn.array([0]))
       Y = mxn.concat(Y,mxn.expand_dims(y,axis=0),dim=0)
       P1 = mxn.concat(P1, mxn.expand_dims(X1,axis=0),dim=0)
       P2 = mxn.concat(P2, mxn.expand_dims(X3,axis=0),dim=0)
-      '''
-      if y:
-        p1=x1
-        p2=x3
-        print('yes5')
-        return p1,p2
-      '''
+      
       '---CASE 6: g1 =0 (alpha =0), g4 = 0 (beta =beta0), lam2 =0, lam3 =0----'
       y = checker_rot(A, B, C, D, -A, -C, -B, -D, mxn.array([0]), beta0)
       Y = mxn.concat(Y,mxn.expand_dims(y,axis=0),dim=0)
       P1 = mxn.concat(P1, mxn.expand_dims(X1,axis=0),dim=0)
       P2 = mxn.concat(P2, mxn.expand_dims(X4,axis=0),dim=0)
-      '''
-      if y:
-        p1=x1
-        p2=x4
-        print('yes6')
-        return p1,p2
-      '''
+      
       '---CASE 7: g2 =0 (alpha =alpha0), g3 = 0 (beta =0), lam1 =0, lam4 =0----'
       y = checker_rot(-A, -B, -C, -D, A, C, B, D, alpha0, mxn.array([0]))
       Y = mxn.concat(Y,mxn.expand_dims(y,axis=0),dim=0)
       P1 = mxn.concat(P1, mxn.expand_dims(X2,axis=0),dim=0)
       P2 = mxn.concat(P2, mxn.expand_dims(X3,axis=0),dim=0)
-      '''
-      if y:
-        p1=x2
-        p2=x3
-        print('yes7')
-        return p1,p2
-      '''
+      
       '---CASE 8: g2 =0 (alpha =alpha0), g4 = 0 (beta =beta0), lam1 =0, lam3 =0----'
       y = checker_rot(-A, -B, -C, -D, -A, -C, -B, -D, alpha0, beta0)
       Y = mxn.concat(Y,mxn.expand_dims(y,axis=0),dim=0)
       P1 = mxn.concat(P1, mxn.expand_dims(X2,axis=0),dim=0)
       P2 = mxn.concat(P2, mxn.expand_dims(X4,axis=0),dim=0)
-      '''
-      if y:
-        p1=x2
-        p2=x4
-        print('yes8')
-        return p1,p2
-      #print('no')
-      return p1,p2
-      '''
+      
       return P1, P2, Y
 
 def opt_pts_rot(X1, X2, X3, X4,batch,dim):
@@ -211,28 +145,3 @@ def opt_pts_rot(X1, X2, X3, X4,batch,dim):
     dist = distance(P1, P2, Y) #shape (batch,)
 
     return dist
-'''
-X1=[[0.33608175, 0.83448615, 0.43667142], [0.89592573, 0.31949744, 0.30860731]]
-X2=[[0.40752846, 0.74777028, 0.5241757 ], [0.85835948, 0.49176357, 0.14624495]]
-X3=[[0.50765006, 0.84737936, 0.15569086], [0.6206815, 0.58409488, 0.52305606]]
-X4=[[0.53881,    0.60703189, 0.58411992], [0.83163155, 0.1047268,  0.54536342]]
-
-X1=np.transpose(np.asarray(X1))
-X2=np.transpose(np.asarray(X2))
-X3=np.transpose(np.asarray(X3))
-X4=np.transpose(np.asarray(X4))
-
-X1=mx.nd.array(X1)
-X2=mx.nd.array(X2)
-X3=mx.nd.array(X3)
-X4=mx.nd.array(X4)
-print(X1)
-s=X1.shape
-
-
-
-dis=opt_pts_rot(np.squeeze(np.asarray(X1.as_np_ndarray(),dtype='float32')),np.squeeze(np.asarray(X2.as_np_ndarray(),dtype='float32')),np.squeeze(np.asarray(X3.as_np_ndarray(),dtype='float32')),np.squeeze(np.asarray(X4.as_np_ndarray(),dtype='float32')),s[1],s[0])
-print(dis)
-dis=mx.nd.array(np.squeeze(np.asarray(dis)))
-print(dis)
-'''
