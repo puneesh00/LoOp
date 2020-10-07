@@ -2,7 +2,8 @@ import mxnet.ndarray as mxn
 
 def similarity(P1, P2, Y):
     dis = mxn.sum(P1*P2, axis = 1)
-    return mxn.min((dis*Y + 1000*(1-Y)), axis = 0)
+    return -mxn.min((-dis*Y + 1000*(1-Y)), axis = 0)
+
 
 def point_lin(x1,x2,cos):
 	po1 = x1*(1-cos)*0.5 + x2*(1+cos)*0.5
