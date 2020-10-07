@@ -16,7 +16,7 @@ import datetime
 import csv
 import os
 
-from .embedding_aug_mx import get_embedding_aug, get_opt_emb_dis, get_min_dis, get_sum_exp_dis, euclidean_dist
+from .embedding_aug_mx import  get_opt_emb_dis, get_min_dis, get_sum_exp_dis, euclidean_dist
 
 
 class HPHNTripletLoss(mx.gluon.loss.Loss):
@@ -105,8 +105,8 @@ class LiftedStructureLoss(mx.gluon.loss.Loss):
         self.batch_size = embeddings.shape[0]
         
         gen_start_time = time.time()
-        dist_ap, dist_an, ids, a1l, a2l = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm)
-        dist_an = get_sum_exp_dis(F, dist_an, ids, a1l, a2l)
+        dist_ap, dist_an0, ids, a1l, a2l = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm)
+        dist_an = get_sum_exp_dis(F, dist_an0, ids, a1l, a2l)
         gen_time = time.time() - gen_start_time
         
         loss = F.relu(F.log(dist_an) + dist_ap + self.margin)**2

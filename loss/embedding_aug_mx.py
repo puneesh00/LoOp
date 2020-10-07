@@ -86,7 +86,7 @@ def concat(F,X1,X2,X1l,X2l):
     
     return X1,X2,X3,X4,a1l,a2l,ids 
 
-def get_min_dis(F, dis,label,a1l,a2l):
+def get_min_dis(F, dis0,label,a1l,a2l):
     k=0
     for l in range(label.shape[0]):
       id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
@@ -94,11 +94,11 @@ def get_min_dis(F, dis,label,a1l,a2l):
       
       if len(id1)>0 or len(id2)>0:
         if len(id1)<1:
-          dist=F.min(dis[id2])
+          dist=F.min(dis0[id2])
         elif len(id2)<1:
-          dist=F.min(dis[id1])
+          dist=F.min(dis0[id1])
         else:
-          dist=F.min(F.concat(F.min(dis[id1]), F.min(dis[id2]), dim=0))
+          dist=F.min(F.concat(F.min(dis0[id1]), F.min(dis0[id2]), dim=0))
         
         if k==0:
           k=k+1
@@ -109,7 +109,7 @@ def get_min_dis(F, dis,label,a1l,a2l):
                             
     return dis
     
-def get_sum_exp_dis(F, dis,label,a1l,a2l):
+def get_sum_exp_dis(F, dis0,label,a1l,a2l):
     k=0
     for l in range(label.shape[0]):
       id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
@@ -117,11 +117,11 @@ def get_sum_exp_dis(F, dis,label,a1l,a2l):
       
       if len(id1)>0 or len(id2)>0:
         if len(id1)<1:
-          dist=F.sum(F.exp(-dis[id2]))
+          dist=F.sum(F.exp(-dis0[id2]))
         elif len(id2)<1:
-          dist=F.sum(F.exp(-dis[id1]))
+          dist=F.sum(F.exp(-dis0[id1]))
         else:
-          dist=F.sum(F.concat(F.sum(F.exp(-dis[id1])), F.sum(F.exp(-dis[id2])), dim=0))
+          dist=F.sum(F.concat(F.sum(F.exp(-dis0[id1])), F.sum(F.exp(-dis0[id2])), dim=0))
         
         if k==0:
           k=k+1
