@@ -131,40 +131,7 @@ def get_sum_exp_dis(F, dis0,label,a1l,a2l):
         
     return dis
 
-def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
-    batch_size = embeddings.shape[0]
-    dim=embeddings.shape[1]
-
-    assert num_instance % 2 == 0, 'num_instance should be even number for simple implementation'
-
-    X1=embeddings[0:batch_size:2]
-    X2=embeddings[1:batch_size:2]
-    X1l=labels[0:batch_size:2]
-    X2l=labels[1:batch_size:2]
-    labelsorg = labels
-    labels=labels[0:batch_size:num_instance]
-   
-    print('labelsorg shape', labelsorg.shape)
-    sim=F.arccos(F.sum(X1*X2, axis = 1))
-    ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
-    indx=[]
-    
-    if len(ind)>1:
-      indx=[i for i in range(len(labels)) if labels[i] in X1l[ind]]
-      if len(indx)>1:
-        X1=X1[ind]
-        X2=X2[ind]
-        X1l=X1l[ind]
-        X2l=X2l[ind]
-      
-    X1, X2, X3, X4, a1l, a2l, ids = concat(F,X1,X2,X1l,X2l)
-    
-    if len(indx)>1:
-      batch_size = X1.shape[0]
-      dis = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), batch_size, dim)  
-    else:
-      dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)
-    
+def get_pos_dis(F, embeddings, labelsorg):
     dis_ap = euclidean_dist_alt(F, embeddings, embeddings)
     N = dis_ap.shape[0]
     is_pos = F.equal(labelsorg.broadcast_to((N, N)), labelsorg.broadcast_to((N, N)).T).astype('float32')
@@ -181,12 +148,65 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     t = t + k1*F.array([0.0,-1.0])
     print('t after', t)
     dis_ap1 = F.max(t, axis=1)
+    return dis_ap1
+
+def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
+    batch_size = embeddings.shape[0]
+    dim=embeddings.shape[1]
+
+    assert num_instance % 2 == 0, 'num_instance should be even number for simple implementation'
+
+    X1=embeddings[0:batch_size:2]
+    X2=embeddings[1:batch_size:2]
+    X1l=labels[0:batch_size:2]
+    X2l=labels[1:batch_size:2]
+    labelsorg = labels
+    labels=labels[0:batch_size:num_instance]
+   
+    #print('labelsorg shape', labelsorg.shape)
+    if l2_norm:
+      sim=F.arccos(F.sum(X1*X2, axis = 1))
+    else:
+      sim=F.arccos(F.sum(X1*X2, axis = 1)/(F.sum(X1*X1, axis = 1)*F.sum(X2*X2, axis = 1)))
+    
+    ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
+    indx=[]
+    
+    if len(ind)>1:
+      indx=[i for i in range(len(labels)) if labels[i] in X1l[ind]]
+      if len(indx)>1:
+        X1=X1[ind]
+        X2=X2[ind]
+        X1l=X1l[ind]
+        X2l=X2l[ind]
+    
+    if num_instance==2:
+        if l2_norm:
+          dis_ap1 = F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
+        else:
+          dis_ap1 = F.sum(X1*X2, axis=1) #num_ins=2 for n-pair
+    else:
+        dis_ap1 = get_pos_dis(F, embeddings, labelsorg)
+        if len(indx)>1:
+          dis_ap1 = dis_ap1[ind]
+        print('dis_ap', dis_ap1)
+    
+    X1, X2, X3, X4, a1l, a2l, ids = concat(F,X1,X2,X1l,X2l)
     
     if len(indx)>1:
-        dis_ap1 = dis_ap1[ind]
-    print('dis_ap', dis_ap1)
+      if l2_norm:
+        batch_size = X1.shape[0]
+        dis = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), batch_size, dim)  
+      else:
+        dis = opt_pts_lin(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4))
+    else:
+      if l2_norm:
+        dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)
+      else:
+        dis = F.sum(X1*X3, axis=1)
     
     #dis_an = get_min_dis(F, dis, ids, a1l, a2l) #for hphn-triplet
     #dis_an = get_sum_exp_dis(F, dis, ids, a1l, a2l) #for lifted-struct
-      
+    #dis_an = -get_min_dis(F, -dis, ids, a1l, a2l) #for n-pair
+    
     return dis_ap1, dis, ids, a1l, a2l #dis_an
