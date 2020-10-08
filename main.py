@@ -20,7 +20,7 @@ import argparse
 import dataset as D
 import transforms as T
 from model import Model
-from loss import HPHNTripletLoss, LiftedStructureLoss
+from loss import HPHNTripletLoss, LiftedStructureLoss, Npairloss
 from runner import Trainer, Evaluator
 from util import SummaryWriter
 
