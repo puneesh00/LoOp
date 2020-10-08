@@ -166,44 +166,39 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     #print('labelsorg shape', labelsorg.shape)
     if l2_norm:
       sim=F.arccos(F.sum(X1*X2, axis = 1))
-    else:
-      sim=F.arccos(F.sum(X1*X2, axis = 1)/(F.sum(X1*X1, axis = 1)*F.sum(X2*X2, axis = 1)))
+      ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
+      indx=[]
     
-    ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
-    indx=[]
+      if len(ind)>1:
+        indx=[i for i in range(len(labels)) if labels[i] in X1l[ind]]
+        if len(indx)>1:
+          X1=X1[ind]
+          X2=X2[ind]
+          X1l=X1l[ind]
+          X2l=X2l[ind]
     
-    if len(ind)>1:
-      indx=[i for i in range(len(labels)) if labels[i] in X1l[ind]]
-      if len(indx)>1:
-        X1=X1[ind]
-        X2=X2[ind]
-        X1l=X1l[ind]
-        X2l=X2l[ind]
-    
-    if num_instance==2:
-        if l2_norm:
-          dis_ap1 = F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
-        else:
-          dis_ap1 = F.sum(X1*X2, axis=1) #num_ins=2 for n-pair
-    else:
+      if num_instance==2:
+        dis_ap1 = F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
+      else:
         dis_ap1 = get_pos_dis(F, embeddings, labelsorg)
         if len(indx)>1:
           dis_ap1 = dis_ap1[ind]
         print('dis_ap', dis_ap1)
+        
+    else:
+      dis_ap1 = F.sum(X1*X2, axis=1) #num_ins=2 for n-pair
     
     X1, X2, X3, X4, a1l, a2l, ids = concat(F,X1,X2,X1l,X2l)
     
-    if len(indx)>1:
-      if l2_norm:
+    if l2_norm:
+      if len(indx)>1:
         batch_size = X1.shape[0]
         dis = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), batch_size, dim)  
       else:
-        dis = opt_pts_lin(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4))
-    else:
-      if l2_norm:
         dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)
-      else:
-        dis = F.sum(X1*X3, axis=1)
+        
+    else:
+        dis = opt_pts_lin(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4))
     
     #dis_an = get_min_dis(F, dis, ids, a1l, a2l) #for hphn-triplet
     #dis_an = get_sum_exp_dis(F, dis, ids, a1l, a2l) #for lifted-struct
