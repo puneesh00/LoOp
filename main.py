@@ -132,7 +132,7 @@ def main():
     args = parser.parse_args()
     
     # define args more
-    if args.data_name == 'CARS196:
+    if args.data_name == 'CARS196':
       args.train_meta = './meta/CARS196/train.txt'
       args.test_meta = './meta/CARS196/test.txt'
     elif args.data_name == 'CUB200':
