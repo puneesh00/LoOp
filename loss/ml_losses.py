@@ -114,3 +114,28 @@ class LiftedStructureLoss(mx.gluon.loss.Loss):
         total_time = time.time() - total_start_time
 
         return loss
+    
+class Npairloss(mx.gluon.loss.Loss):
+    def __init__(self,soft_margin=False, weight=None, batch_axis=0, num_instances=2, n_inner_pts=0, l2_norm=False):
+        super(Npairloss, self).__init__(weight, batch_axis)
+        self.soft_margin = soft_margin
+        self.num_instance = num_instances
+        self.n_inner_pts = n_inner_pts
+        self.batch_size = None
+        self.l2_norm = l2_norm
+
+    def hybrid_forward(self, F, embeddings, labels):
+        total_start_time = time.time()
+        gen_time = 0
+        self.batch_size = embeddings.shape[0]
+
+        gen_start_time = time.time()
+        dist_ap, dist_an0, ids, a1l, a2l = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm)
+        dist_an = get_sum_exp_dis(F, -dist_an0, ids, a1l, a2l)
+        gen_time = time.time() - gen_start_time
+
+        loss = F.log(1.0 + F.exp(-dist_ap)*dist_an)
+
+        total_time = time.time() - total_start_time
+
+        return loss    
