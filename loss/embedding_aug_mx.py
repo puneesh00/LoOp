@@ -11,7 +11,8 @@ from __future__ import unicode_literals
 import mxnet as mx
 import numpy as np
 #import mxnet.ndarray as mxn
-from .optimum_pts_mx import *
+from .optimum_pts_rot import *
+from .optimum_pts_lin import *
 
 def euclidean_dist(F, x, y, clip_min=1e-12, clip_max=1e12):
     m, n = x.shape[0], y.shape[0]
