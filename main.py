@@ -47,8 +47,8 @@ parser.add_argument('--optim', default='adam', type=str,
                     help='use adam')
 parser.add_argument('--image_size', default=227, type=int,
                     help='width and height of input image')
-parser.add_argument('--data_name', default='car196', type=str,
-                    help='car196 | sop')
+parser.add_argument('--data_name', default='CARS196', type=str,
+                    help='CARS196 or CUB200 or SOP')
 parser.add_argument('--start_epoch', default=0, type=int,
                     help='start epoch')
 parser.add_argument('--sigma', default=0.5, type=float,
@@ -132,8 +132,12 @@ def main():
     args = parser.parse_args()
     
     # define args more
-    args.train_meta = './meta/CARS196/train.txt'
-    args.test_meta = './meta/CARS196/test.txt'
+    if args.data_name == 'CARS196:
+      args.train_meta = './meta/CARS196/train.txt'
+      args.test_meta = './meta/CARS196/test.txt'
+    elif args.data_name == 'CUB200':
+      args.train_meta = './meta/CUB_200_2011/train.txt'
+      args.test_meta = './meta/CUB_200_2011/test.txt'
     
     args.lr_decay_epochs = [int(epoch) for epoch in args.lr_decay_epochs.split(',')]
     args.recallk = [int(k) for k in args.recallk.split(',')]
@@ -164,6 +168,8 @@ def main():
       loss = HPHNTripletLoss(margin=args.margin, soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.ee_l2norm)
     elif args.loss == 'lifted-structure':
       loss = LiftedStructureLoss(margin=args.margin, soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.ee_l2norm)
+    elif args.loss == 'n-pair':
+      loss = Npairloss(margin=args.margin, soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=False)
 
     # Load logger and saver
     summary_writer = SummaryWriter(os.path.join(args.save_dir, 'tensorboard_log'))
