@@ -132,8 +132,7 @@ def get_sum_exp_dis(F, dis0,label,a1l,a2l):
         
     return dis
 
-def get_pos_dis(F, embeddings, labelsorg):
-    dis_ap = euclidean_dist_alt(F, embeddings, embeddings)
+def get_pos_dis(F, dis_ap, labelsorg):
     N = dis_ap.shape[0]
     is_pos = F.equal(labelsorg.broadcast_to((N, N)), labelsorg.broadcast_to((N, N)).T).astype('float32')
     #print(is_pos)
@@ -151,7 +150,52 @@ def get_pos_dis(F, embeddings, labelsorg):
     dis_ap1 = F.max(t, axis=1)
     return dis_ap1
 
-def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
+def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta, mrg):
+    k=0
+    dis_ap_copy=dis_ap
+    for i in range(dis_ap.shape[0]):
+      if i%2==0:
+         dis_ap_copy[i+1,i] = 1000
+    
+    for l in range(len(ids)):
+      id1=[i for i in range(a1l.shape[0]) if a1l[i]==ids[l] ]
+      id2=[i for i in range(a2l.shape[0]) if a2l[i]==ids[l] ]
+      
+      sim_pair=F.min(dis_ap[ind[l]:ind[l]+2,(ind[l]//2)*num_ins:(ind[l]//2+1)*num_ins],axis=1)
+      if sim_pair[0]==sim_pair[1]:
+        sim_pos=sim_pair[0]
+      else:
+        sim_pos=F.min(sim_pair)
+      
+      if len(id1)>0 or len(id2)>0:
+        if len(id1)<1:
+          dist_neg=dis_an[dis_an[id2]>sim_pos-th]
+          sim_neg=F.max(dis_an[id2])
+        elif len(id2)<1:
+          dist_neg=dis_an[dis_an[id1]>sim_pos-th]
+        sim_neg=F.max(dis_an[id1])
+        else:
+          dist_neg=F.concat(dis_an[dis_an[id1]>sim_pos-th], dis_an[dis_an[id2]>sim_pos-th], dim=0)
+          sim_neg=F.max(F.concat(F.max(dis_an[id1]), F.max(dis_an[id2]), dim=0))
+        
+        dist_neg=F.sum(F.exp(beta*(dist_neg-mrg)))
+        
+        dist_pos=dis_ap_copy[ind[l]:ind[l]+2,(ind[l]//2)*num_ins:(ind[l]//2+1)*num_ins].reshape(-1)
+        dist_pos=dist_pos[dist_pos<sim_neg+th]
+        dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
+        
+        if k==0:
+          k=k+1
+          dis_neg=dist_neg
+          dis_pos=dist_pos
+        else:
+          dis_neg=F.concat(dis_neg,dist_neg,dim=0)
+          dis_pos=F.concat(dis_pos,dist_pos,dim=0)
+    
+    return dis_neg, dis_pos
+    
+
+def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=False):
     batch_size = embeddings.shape[0]
     dim=embeddings.shape[1]
 
@@ -181,10 +225,12 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
       if num_instance==2:
         dis_ap1 = F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
       else:
-        dis_ap1 = get_pos_dis(F, embeddings, labelsorg)
-        if len(indx)>1:
-          dis_ap1 = dis_ap1[ind]
-        print('dis_ap', dis_ap1)
+        dis_ap1 = euclidean_dist_alt(F, embeddings, embeddings)
+        if !multisim:
+          dis_ap1 = get_pos_dis(F, dis_ap1, labelsorg)
+          if len(indx)>1:
+            dis_ap1 = dis_ap1[ind]
+          print('dis_ap', dis_ap1)
         
     else:
       dis_ap1 = F.sum(X1*X2, axis=1) #num_ins=2 for n-pair
@@ -203,6 +249,9 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True):
     
     #dis_an = get_min_dis(F, dis, ids, a1l, a2l) #for hphn-triplet
     #dis_an = get_sum_exp_dis(F, dis, ids, a1l, a2l) #for lifted-struct
-    #dis_an = -get_min_dis(F, -dis, ids, a1l, a2l) #for n-pair
+    #dis_an = -get_sum_exp(F, -dis, ids, a1l, a2l) #for n-pair
     
-    return dis_ap1, dis, ids, a1l, a2l #dis_an
+    if multisim:
+      return dis_ap1, dis, ids, a1l, a2l, ind 
+    else:
+      return dis_ap1, dis, ids, a1l, a2l  
