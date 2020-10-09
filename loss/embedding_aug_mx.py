@@ -169,29 +169,46 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta,
       
       if len(id1)>0 or len(id2)>0:
         if len(id1)<1:
-          dist_neg=dis_an[dis_an[id2]>sim_pos-th]
+          idc2=[i for i in range(len(id2)) if dis_an[id2][i]>sim_pos-th]
           sim_neg=F.max(dis_an[id2])
         elif len(id2)<1:
-          dist_neg=dis_an[dis_an[id1]>sim_pos-th]
-        sim_neg=F.max(dis_an[id1])
+          idc1=[i for i in range(len(id1)) if dis_an[id1][i]>sim_pos-th]
+          sim_neg=F.max(dis_an[id1])
         else:
-          dist_neg=F.concat(dis_an[dis_an[id1]>sim_pos-th], dis_an[dis_an[id2]>sim_pos-th], dim=0)
+          idc1=[i for i in range(len(id1)) if dis_an[id1][i]>sim_pos-th]
+          idc2=[i for i in range(len(id2)) if dis_an[id2][i]>sim_pos-th]
           sim_neg=F.max(F.concat(F.max(dis_an[id1]), F.max(dis_an[id2]), dim=0))
         
-        dist_neg=F.sum(F.exp(beta*(dist_neg-mrg)))
+        if len(idc1)>0 or len(idc2)>0:
+          if len(idc1)<1:
+            dist_neg=dis_an[idc2]
+          elif len(idc2)<1:
+            dist_neg=dis_an[idc1]
+          else:
+            dist_neg=F.concat(dis_an[idc1], dis_an[idc2], dim=0)
+          dist_neg=F.sum(F.exp(beta*(dist_neg-mrg)))
+        else:
+          dist_neg=F.array([0])
         
         dist_pos=dis_ap_copy[ind[l]:ind[l]+2,(ind[l]//2)*num_ins:(ind[l]//2+1)*num_ins].reshape(-1)
-        dist_pos=dist_pos[dist_pos<sim_neg+th]
-        dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
+        idc=[i for i in range(len(dist_pos)) if dist_pos[i]<sim_neg+th]
+        if len(idc)>0:
+          dist_pos=dist_pos[idc]
+          dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
+        else:
+          dist_pos=F.array([0])
+        
+        if len(idc)<1 and len(idc1)<1 and len(idc2)<1:
+          continue
         
         if k==0:
           k=k+1
-          dis_neg=dist_neg
           dis_pos=dist_pos
+          dis_neg=dist_neg
         else:
-          dis_neg=F.concat(dis_neg,dist_neg,dim=0)
           dis_pos=F.concat(dis_pos,dist_pos,dim=0)
-    
+          dis_neg=F.concat(dis_neg,dist_neg,dim=0)
+
     return dis_neg, dis_pos
     
 
