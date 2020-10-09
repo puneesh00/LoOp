@@ -243,7 +243,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
         dis_ap1 = F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
       else:
         dis_ap1 = euclidean_dist_alt(F, embeddings, embeddings)
-        if !multisim:
+        if not multisim:
           dis_ap1 = get_pos_dis(F, dis_ap1, labelsorg)
           if len(indx)>1:
             dis_ap1 = dis_ap1[ind]

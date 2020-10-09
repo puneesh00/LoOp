@@ -16,7 +16,7 @@ import datetime
 import csv
 import os
 
-from .embedding_aug_mx import  get_opt_emb_dis, get_min_dis, get_sum_exp_dis, euclidean_dist
+from .embedding_aug_mx import  get_opt_emb_dis, get_min_dis, get_sum_exp_dis, euclidean_dist, pair_mining
 
 
 class HPHNTripletLoss(mx.gluon.loss.Loss):

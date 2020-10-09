@@ -20,7 +20,7 @@ import argparse
 import dataset as D
 import transforms as T
 from model import Model
-from loss import HPHNTripletLoss, LiftedStructureLoss, Npairloss
+from loss import HPHNTripletLoss, LiftedStructureLoss, Npairloss, MSloss
 from runner import Trainer, Evaluator
 from util import SummaryWriter
 
@@ -171,7 +171,7 @@ def main():
     elif args.loss == 'n-pair':
       loss = Npairloss(soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=False)
     elif args.loss == 'ms':
-      loss = MSloss(soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.eel2_norm)
+      loss = MSloss(soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.ee_l2norm)
 
     # Load logger and saver
     summary_writer = SummaryWriter(os.path.join(args.save_dir, 'tensorboard_log'))
