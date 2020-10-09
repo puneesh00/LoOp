@@ -161,6 +161,8 @@ class MSloss(mx.gluon.loss.Loss):
 
         gen_start_time = time.time()
         dist_ap, dist_an0, ids, a1l, a2l, ind = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm, multisim = True)
+        dist_ap = (2-dist_ap**2)/2.0
+        dist_an0 = (2 -dist_an0**2)/2.0
         dist_neg, dist_pos = pair_mining(F, dist_ap, dist_an0, ids, a1l, a2l, ind, labels, self.num_instance, self.th, self.alpha, self.beta, self.mrg)
         gen_time = time.time() - gen_start_time
 
