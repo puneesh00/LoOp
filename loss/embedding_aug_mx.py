@@ -169,15 +169,15 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
       if len(id1)>0 or len(id2)>0:
         if len(id1)<1:
           idc1=[]
-          idc2=[i for i in range(len(id2)) if dis_an[id2][i]>sim_pos-th]
+          idc2=[i for i in range(len(id2)) if dis_an[id2][i]>(sim_pos-th)]
           sim_neg=F.max(dis_an[id2])
         elif len(id2)<1:
           idc2=[]
-          idc1=[i for i in range(len(id1)) if dis_an[id1][i]>sim_pos-th]
+          idc1=[i for i in range(len(id1)) if dis_an[id1][i]>(sim_pos-th)]
           sim_neg=F.max(dis_an[id1])
         else:
-          idc1=[i for i in range(len(id1)) if dis_an[id1][i]>sim_pos-th]
-          idc2=[i for i in range(len(id2)) if dis_an[id2][i]>sim_pos-th]
+          idc1=[i for i in range(len(id1)) if dis_an[id1][i]>(sim_pos-th)]
+          idc2=[i for i in range(len(id2)) if dis_an[id2][i]>(sim_pos-th)]
           sim_neg=F.max(F.concat(F.max(dis_an[id1]), F.max(dis_an[id2]), dim=0))
         
         if len(idc1)>0 or len(idc2)>0:
@@ -192,16 +192,16 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
           dist_neg=F.array([1.0])
         
         dist_pos=(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id)).reshape(-1)
-        idc=[i for i in range(len(dist_pos)) if dist_pos[i]<sim_neg+th]
-        if len(idc)>0:
-          dist_pos=dist_pos[idc]
+        idc=dist_pos<(sim_neg+th)
+        if F.sum(idc)>0:
+          dist_pos=F.contrib.boolean_mask(dist_pos,idc)
           idc=[i for i in range(len(dist_pos)-1) if dist_pos[i]!=dist_pos[i+1]]
           dist_pos=dist_pos[idc]
           dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
         else:
           dist_pos=F.array([0.0])
         
-        if len(idc)<1 and len(idc1)<1 and len(idc2)<1:
+        if F.sum(idc)==0 and len(idc1)<1 and len(idc2)<1:
           continue
         
         if k==0:
