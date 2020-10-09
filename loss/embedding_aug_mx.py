@@ -150,18 +150,17 @@ def get_pos_dis(F, dis_ap, labelsorg):
     dis_ap1 = F.max(t, axis=1)
     return dis_ap1
 
-def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta, mrg):
+def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alpha, beta, mrg):
     k=0
-    #dis_ap_copy=dis_ap
-    #for i in range(dis_ap.shape[0]):
-    #  if i%2==0:
-    #     dis_ap_copy[i+1,i] = 1000
+    N = dis_ap.shape[0]
+    is_pos = F.equal(labels.broadcast_to((N, N)), labels.broadcast_to((N, N)).T).astype('float32')
+    id_mat = F.repeat(F.expand_dims(F.repeat(F.array([i for i in range(N//2)]), 2), axis=1), N, axis=1)
     
     for l in range(len(ids)):
       id1=[i for i in range(a1l.shape[0]) if a1l[i]==ids[l] ]
       id2=[i for i in range(a2l.shape[0]) if a2l[i]==ids[l] ]
-      
-      sim_pair=F.min(dis_ap[ind[l]:ind[l]+2,(ind[l]//2)*num_ins:(ind[l]//2+1)*num_ins],axis=1)
+      is_id=(id_mat==ind[l])
+      sim_pair=F.min(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id),axis=1)
       if sim_pair[0]==sim_pair[1]:
         sim_pos=sim_pair[0]
       else:
@@ -192,7 +191,7 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta,
         else:
           dist_neg=F.array([1.0])
         
-        dist_pos=dis_ap[ind[l]:ind[l]+2,(ind[l]//2)*num_ins:(ind[l]//2+1)*num_ins].reshape(-1)
+        dist_pos=(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id)).reshape(-1)
         idc=[i for i in range(len(dist_pos)) if dist_pos[i]<sim_neg+th]
         if len(idc)>0:
           dist_pos=dist_pos[idc]
