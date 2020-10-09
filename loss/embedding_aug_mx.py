@@ -152,10 +152,10 @@ def get_pos_dis(F, dis_ap, labelsorg):
 
 def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta, mrg):
     k=0
-    dis_ap_copy=dis_ap
-    for i in range(dis_ap.shape[0]):
-      if i%2==0:
-         dis_ap_copy[i+1,i] = 1000
+    #dis_ap_copy=dis_ap
+    #for i in range(dis_ap.shape[0]):
+    #  if i%2==0:
+    #     dis_ap_copy[i+1,i] = 1000
     
     for l in range(len(ids)):
       id1=[i for i in range(a1l.shape[0]) if a1l[i]==ids[l] ]
@@ -193,6 +193,8 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta,
         dist_pos=dis_ap_copy[ind[l]:ind[l]+2,(ind[l]//2)*num_ins:(ind[l]//2+1)*num_ins].reshape(-1)
         idc=[i for i in range(len(dist_pos)) if dist_pos[i]<sim_neg+th]
         if len(idc)>0:
+          dist_pos=dist_pos[idc]
+          idc=[i for i in range(len(dist_pos)) if dist_pos[i]!=dist_pos[i+1]]
           dist_pos=dist_pos[idc]
           dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
         else:
