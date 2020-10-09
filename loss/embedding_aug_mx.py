@@ -169,9 +169,11 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta,
       
       if len(id1)>0 or len(id2)>0:
         if len(id1)<1:
+          idc1=[]
           idc2=[i for i in range(len(id2)) if dis_an[id2][i]>sim_pos-th]
           sim_neg=F.max(dis_an[id2])
         elif len(id2)<1:
+          idc2=[]
           idc1=[i for i in range(len(id1)) if dis_an[id1][i]>sim_pos-th]
           sim_neg=F.max(dis_an[id1])
         else:
