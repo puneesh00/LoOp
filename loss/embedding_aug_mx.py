@@ -266,7 +266,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
     
     #dis_an = get_min_dis(F, dis, ids, a1l, a2l) #for hphn-triplet
     #dis_an = get_sum_exp_dis(F, dis, ids, a1l, a2l) #for lifted-struct
-    #dis_an = -get_sum_exp(F, -dis, ids, a1l, a2l) #for n-pair
+    #dis_an = get_sum_exp_dis(F, -dis, ids, a1l, a2l) #for n-pair
     
     if multisim:
       return dis_ap1, dis, ids, a1l, a2l, ind 
