@@ -192,11 +192,11 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta,
         else:
           dist_neg=F.array([1.0])
         
-        dist_pos=dis_ap_copy[ind[l]:ind[l]+2,(ind[l]//2)*num_ins:(ind[l]//2+1)*num_ins].reshape(-1)
+        dist_pos=dis_ap[ind[l]:ind[l]+2,(ind[l]//2)*num_ins:(ind[l]//2+1)*num_ins].reshape(-1)
         idc=[i for i in range(len(dist_pos)) if dist_pos[i]<sim_neg+th]
         if len(idc)>0:
           dist_pos=dist_pos[idc]
-          idc=[i for i in range(len(dist_pos)) if dist_pos[i]!=dist_pos[i+1]]
+          idc=[i for i in range(len(dist_pos)-1) if dist_pos[i]!=dist_pos[i+1]]
           dist_pos=dist_pos[idc]
           dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
         else:
