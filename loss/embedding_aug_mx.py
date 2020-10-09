@@ -188,7 +188,7 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta,
             dist_neg=F.concat(dis_an[idc1], dis_an[idc2], dim=0)
           dist_neg=F.sum(F.exp(beta*(dist_neg-mrg)))
         else:
-          dist_neg=F.array([0])
+          dist_neg=F.array([1.0])
         
         dist_pos=dis_ap_copy[ind[l]:ind[l]+2,(ind[l]//2)*num_ins:(ind[l]//2+1)*num_ins].reshape(-1)
         idc=[i for i in range(len(dist_pos)) if dist_pos[i]<sim_neg+th]
@@ -196,7 +196,7 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, num_ins, th, alpha, beta,
           dist_pos=dist_pos[idc]
           dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
         else:
-          dist_pos=F.array([0])
+          dist_pos=F.array([0.0])
         
         if len(idc)<1 and len(idc1)<1 and len(idc2)<1:
           continue
