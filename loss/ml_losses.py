@@ -139,4 +139,33 @@ class Npairloss(mx.gluon.loss.Loss):
 
         total_time = time.time() - total_start_time
 
+        return loss
+    
+class MSloss(mx.gluon.loss.Loss):
+    def __init__(self, th = 0.1, mrg = 1.0, alpha = 2.0, beta = 50.0, soft_margin=False, weight=None, batch_axis=0, num_instances=2, n_inner_pts=0, l2_norm=False):
+        super(MSloss, self).__init__(weight, batch_axis)
+        self.soft_margin = soft_margin
+        self.num_instance = num_instances
+        self.n_inner_pts = n_inner_pts
+        self.batch_size = None
+        self.l2_norm = l2_norm
+        self.th = th 
+        self.mrg = mrg
+        self.alpha = alpha
+        self.beta= beta
+
+    def hybrid_forward(self, F, embeddings, labels):
+        total_start_time = time.time()
+        gen_time = 0
+        self.batch_size = embeddings.shape[0]
+
+        gen_start_time = time.time()
+        dist_ap, dist_an0, ids, a1l, a2l, ind = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm, multisim = True)
+        dist_neg, dist_pos = pair_mining(F, dist_ap, dist_an0, ids, a1l, a2l, ind, self.num_instance, self.th, self.alpha, self.beta, self.mrg)
+        gen_time = time.time() - gen_start_time
+
+        loss = 1/(self.alpha)*F.log(1.0 + dist_pos) + 1/(self.beta)*F.log(dist_neg)
+
+        total_time = time.time() - total_start_time
+
         return loss    
