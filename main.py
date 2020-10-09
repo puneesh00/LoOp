@@ -170,7 +170,7 @@ def main():
       loss = LiftedStructureLoss(margin=args.margin, soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.ee_l2norm)
     elif args.loss == 'n-pair':
       loss = Npairloss(soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=False)
-    elif args.loss == 'ms'
+    elif args.loss == 'ms':
       loss = MSloss(soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.eel2_norm)
 
     # Load logger and saver
