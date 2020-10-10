@@ -195,8 +195,8 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
         idc=dist_pos<(sim_neg+th)
         if F.sum(idc)>0:
           dist_pos=F.contrib.boolean_mask(dist_pos,idc)
-          idc=[i for i in range(len(dist_pos)-1) if dist_pos[i]!=dist_pos[i+1]]
-          dist_pos=dist_pos[idc]
+          idce=[i for i in range(len(dist_pos)-1) if dist_pos[i]!=dist_pos[i+1]]
+          dist_pos=dist_pos[idce]
           dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
         else:
           dist_pos=F.array([0.0])
