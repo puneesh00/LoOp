@@ -161,6 +161,7 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
       id2=[i for i in range(a2l.shape[0]) if a2l[i]==ids[l] ]
       is_id=(id_mat==ind[l])
       sim_pair=F.min(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id),axis=1)
+      sim_pair=F.contrib.boolean_mask(sim_pair,(sim_pair<1000))
       if sim_pair[0]==sim_pair[1]:
         sim_pos=sim_pair[0]
       else:
@@ -192,11 +193,12 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
           dist_neg=F.array([1.0])
         
         dist_pos=(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id)).reshape(-1)
+        dist_pos=F.contrib.boolean_mask(dist_pos,(dist_pos<1000))
+        idce=[i for i in range(len(dist_pos)-num_ins+1) if dist_pos[i]!=dist_pos[i+num_ins-1]]
+        dist_pos=dist_pos[idce]
         idc=dist_pos<(sim_neg+th)
         if F.sum(idc)>0:
           dist_pos=F.contrib.boolean_mask(dist_pos,idc)
-          idce=[i for i in range(len(dist_pos)-1) if dist_pos[i]!=dist_pos[i+1]]
-          dist_pos=dist_pos[idce]
           dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
         else:
           dist_pos=F.array([0.0])
