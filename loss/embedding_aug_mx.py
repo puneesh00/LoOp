@@ -152,6 +152,8 @@ def get_pos_dis(F, dis_ap, labelsorg):
 
 def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alpha, beta, mrg):
     k=0
+    dis_pos=F.array([0.0])
+    dis_neg=F.array([1.0])
     N = dis_ap.shape[0]
     is_pos = F.equal(labels.broadcast_to((N, N)), labels.broadcast_to((N, N)).T).astype('float32')
     id_mat = F.repeat(F.expand_dims(F.repeat(F.array([i for i in range(N//2)]), 2), axis=1), N, axis=1)
@@ -243,6 +245,9 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
           X2=X2[ind]
           X1l=X1l[ind]
           X2l=X2l[ind]
+      
+      if len(ind)<2 or len(indx)<2:
+        ind=[i for i in range(sim.shape[0])]
     
       if num_instance==2:
         dis_ap1 = F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
