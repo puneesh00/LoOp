@@ -183,11 +183,11 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
         
         if len(idc1)>0 or len(idc2)>0:
           if len(idc1)<1:
-            dist_neg=dis_an[idc2]
+            dist_neg=dis_an[id2][idc2]
           elif len(idc2)<1:
-            dist_neg=dis_an[idc1]
+            dist_neg=dis_an[id1][idc1]
           else:
-            dist_neg=F.concat(dis_an[idc1], dis_an[idc2], dim=0)
+            dist_neg=F.concat(dis_an[id1][idc1], dis_an[id2][idc2], dim=0)
           dist_neg=F.sum(F.exp(beta*(dist_neg-mrg)))
         else:
           dist_neg=F.array([1.0])
