@@ -152,8 +152,6 @@ def get_pos_dis(F, dis_ap, labelsorg):
 
 def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alpha, beta, mrg):
     k=0
-    dis_pos=F.array([0.0])
-    dis_neg=F.array([1.0])
     N = dis_ap.shape[0]
     is_pos = F.equal(labels.broadcast_to((N, N)), labels.broadcast_to((N, N)).T).astype('float32')
     id_mat = F.repeat(F.expand_dims(F.repeat(F.array([i for i in range(N//2)]), 2), axis=1), N, axis=1)
@@ -193,6 +191,8 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
           dist_neg=F.sum(F.exp(beta*(dist_neg-mrg)))
         else:
           dist_neg=F.array([1.0])
+          #dist_neg.attach_grad()
+          #print('neg none')
         
         dist_pos=(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id)).reshape(-1)
         dist_pos=F.contrib.boolean_mask(dist_pos,(dist_pos<1000))
@@ -204,6 +204,8 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
           dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
         else:
           dist_pos=F.array([0.0])
+          #dist_pos.attach_grad()
+          #print('pos_none')
         
         if F.sum(idc)==0 and len(idc1)<1 and len(idc2)<1:
           continue
@@ -215,6 +217,16 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
         else:
           dis_pos=F.concat(dis_pos,dist_pos,dim=0)
           dis_neg=F.concat(dis_neg,dist_neg,dim=0)
+          
+    if k==0:
+      dis_pos=sim_pos-sim_pos #F.array([0.0])
+      dis_neg=sim_pos-sim_pos+1 #F.array([1.0])
+      #dis_pos.attach_grad()
+      #dis_neg.attach_grad()
+      #print('both none')
+    
+    #print(dis_pos)
+    #print(dis_neg)
 
     return dis_neg, dis_pos
     

@@ -142,7 +142,7 @@ class Npairloss(mx.gluon.loss.Loss):
         return loss
     
 class MSloss(mx.gluon.loss.Loss):
-    def __init__(self, th = 0.1, mrg = 0.5, alpha = 2.0, beta = 50.0, soft_margin=False, weight=None, batch_axis=0, num_instances=2, n_inner_pts=0, l2_norm=False):
+    def __init__(self, th = 0.1, mrg = 0.5, alpha = 2.0, beta = 40.0, soft_margin=False, weight=None, batch_axis=0, num_instances=2, n_inner_pts=0, l2_norm=False):
         super(MSloss, self).__init__(weight, batch_axis)
         self.soft_margin = soft_margin
         self.num_instance = num_instances
@@ -161,6 +161,8 @@ class MSloss(mx.gluon.loss.Loss):
 
         gen_start_time = time.time()
         dist_ap, dist_an0, ids, a1l, a2l, ind = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm, multisim = True)
+        print(dist_ap)
+        print(dist_an0)
         dist_ap = (2-dist_ap**2)/2.0
         dist_an0 = (2 -dist_an0**2)/2.0
         dist_neg, dist_pos = pair_mining(F, dist_ap, dist_an0, ids, a1l, a2l, ind, labels, self.num_instance, self.th, self.alpha, self.beta, self.mrg)
