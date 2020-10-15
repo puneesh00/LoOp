@@ -76,14 +76,14 @@ def concat(F,X1,X2,X1l,X2l):
     X4=X2[ind2]
     X2=X2[ind1]
 
-    ind=[i for i in range(len(X1l)) if X1l[i]!=X3l[i]]
-    X1=X1[ind]
-    X2=X2[ind]
-    X3=X3[ind]
-    X4=X4[ind]
+    ind=(X1l!=X3l) #[i for i in range(len(X1l)) if X1l[i]!=X3l[i]]
+    X1=F.contrib.boolean_mask(X1,ind)
+    X2=F.contrib.boolean_mask(X2,ind)
+    X3=F.contrib.boolean_mask(X3,ind)
+    X4=F.contrib.boolean_mask(X4,ind)
     
-    a1l=a1l[ind]
-    a2l=a2l[ind]
+    a1l=F.contrib.boolean_mask(a1l,ind)
+    a2l=F.contrib.boolean_mask(a2l,ind)
     
     return X1,X2,X3,X4,a1l,a2l,ids 
 
@@ -157,8 +157,8 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
     id_mat = F.repeat(F.expand_dims(F.repeat(F.array([i for i in range(N//2)]), 2), axis=1), N, axis=1)
     
     for l in range(len(ids)):
-      id1=[i for i in range(a1l.shape[0]) if a1l[i]==ids[l] ]
-      id2=[i for i in range(a2l.shape[0]) if a2l[i]==ids[l] ]
+      id1=(a1l==ids[l]) #[i for i in range(a1l.shape[0]) if a1l[i]==ids[l] ]
+      id2=(a2l==ids[l]) #[i for i in range(a2l.shape[0]) if a2l[i]==ids[l] ]
       is_id=(id_mat==ind[l])
       sim_pair=F.min(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id),axis=1)
       sim_pair=F.contrib.boolean_mask(sim_pair,(sim_pair<1000))
@@ -167,27 +167,27 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
       else:
         sim_pos=F.min(sim_pair)
       
-      if len(id1)>0 or len(id2)>0:
-        if len(id1)<1:
-          idc1=[]
-          idc2=[i for i in range(len(id2)) if dis_an[id2][i]>(sim_pos-th)]
-          sim_neg=F.max(dis_an[id2])
-        elif len(id2)<1:
-          idc2=[]
-          idc1=[i for i in range(len(id1)) if dis_an[id1][i]>(sim_pos-th)]
-          sim_neg=F.max(dis_an[id1])
+      if F.sum(id1)>0 or F.sum(id2)>0:
+        if F.sum(id1)<1:
+          idc1=F.zeros(F.sum(id2))
+          idc2=(F.contrib.boolean_mask(dis_an,id2)>(sim_pos-th)) #[i for i in range(len(id2)) if dis_an[id2][i]>(sim_pos-th)]
+          sim_neg=F.max(F.contrib.boolean_mask(dis_an,id2))
+        elif F.sum(id2)<1:
+          idc2=F.zeros(F.sum(id1))
+          idc1=(F.contrib.boolean_mask(dis_an,id1)>(sim_pos-th)) #[i for i in range(len(id1)) if dis_an[id1][i]>(sim_pos-th)]
+          sim_neg=F.max(F.contrib.boolean_mask(dis_an,id1))
         else:
-          idc1=[i for i in range(len(id1)) if dis_an[id1][i]>(sim_pos-th)]
-          idc2=[i for i in range(len(id2)) if dis_an[id2][i]>(sim_pos-th)]
-          sim_neg=F.max(F.concat(F.max(dis_an[id1]), F.max(dis_an[id2]), dim=0))
+          idc1=(F.contrib.boolean_mask(dis_an,id1)>(sim_pos-th)) #[i for i in range(len(id1)) if dis_an[id1][i]>(sim_pos-th)]
+          idc2=(F.contrib.boolean_mask(dis_an,id2)>(sim_pos-th)) #[i for i in range(len(id2)) if dis_an[id2][i]>(sim_pos-th)]
+          sim_neg=F.max(F.concat(F.max(F.contrib.boolean_mask(dis_an,id1)), F.max(F.contrib.boolean_mask(dis_an,id2)), dim=0))
         
-        if len(idc1)>0 or len(idc2)>0:
-          if len(idc1)<1:
-            dist_neg=dis_an[id2][idc2]
-          elif len(idc2)<1:
-            dist_neg=dis_an[id1][idc1]
+        if F.sum(idc1)>0 or F.sum(idc2)>0:
+          if F.sum(idc1)<1:
+            dist_neg=F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id2),idc2)
+          elif F.sum(idc2)<1:
+            dist_neg=F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id1),idc1)
           else:
-            dist_neg=F.concat(dis_an[id1][idc1], dis_an[id2][idc2], dim=0)
+            dist_neg=F.concat(F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id1),idc1), F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id2),idc2), dim=0)
           dist_neg=F.sum(F.exp(beta*(dist_neg-mrg)))
         else:
           dist_neg=F.array([1.0])
@@ -247,16 +247,16 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
     #print('labelsorg shape', labelsorg.shape)
     if l2_norm:
       sim=F.arccos(F.sum(X1*X2, axis = 1))
-      ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
+      ind=(sim>1e-3) #[i for i in range(sim.shape[0]) if sim[i]>1e-3]
       indx=[]
     
-      if len(ind)>1:
-        indx=[i for i in range(len(labels)) if labels[i] in X1l[ind]]
+      if F.sum(ind)>1:
+        indx=([i for i in range(len(labels)) if labels[i] in F.contrib.boolean_mask(X1l,ind)]
         if len(indx)>1:
-          X1=X1[ind]
-          X2=X2[ind]
-          X1l=X1l[ind]
-          X2l=X2l[ind]
+          X1=F.contrib.boolean_mask(X1,ind)
+          X2=F.contrib.boolean_mask(X2,ind)
+          X1l=F.contrib.boolean_mask(X1l,ind)
+          X2l=F.contrib.boolean_mask(X2l,ind)
       
       if len(ind)<2 or len(indx)<2:
         ind=[i for i in range(sim.shape[0])]
