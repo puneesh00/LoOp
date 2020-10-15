@@ -90,16 +90,16 @@ def concat(F,X1,X2,X1l,X2l):
 def get_min_dis(F, dis0,label,a1l,a2l):
     k=0
     for l in range(label.shape[0]):
-      id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
-      id2=[i for i in range(a2l.shape[0]) if a2l[i]==label[l] ]
+      id1=(a1l==label[l]) #[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
+      id2=(a2l==label[l]) #[i for i in range(a2l.shape[0]) if a2l[i]==label[l] ]
       
-      if len(id1)>0 or len(id2)>0:
-        if len(id1)<1:
-          dist=F.min(dis0[id2])
-        elif len(id2)<1:
-          dist=F.min(dis0[id1])
+      if F.sum(id1)>0 or F.sum(id2)>0:
+        if F.sum(id1)<1:
+          dist=F.min(F.contrib.boolean_mask(dis0,id2))
+        elif F.sum(id2)<1:
+          dist=F.min(F.contrib.boolean_mask(dis0,id1))
         else:
-          dist=F.min(F.concat(F.min(dis0[id1]), F.min(dis0[id2]), dim=0))
+          dist=F.min(F.concat(F.min(F.contrib.boolean_mask(dis0,id1)), F.min(F.contrib.boolean_mask(dis0,id2)), dim=0))
         
         if k==0:
           k=k+1
