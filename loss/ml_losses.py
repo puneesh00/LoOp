@@ -173,3 +173,53 @@ class MSloss(mx.gluon.loss.Loss):
         total_time = time.time() - total_start_time
 
         return loss    
+
+class Tripletloss(mx.gluon.loss.Loss):
+    def __init__(self, margin = 0.1, soft_margin=False, weight=None, batch_axis=0, num_instances=2, n_inner_pts=0, l2_norm=True):
+        super(Tripletloss, self).__init__(weight, batch_axis)
+        self.soft_margin = soft_margin
+        self.num_instance = num_instances
+        self.n_inner_pts = n_inner_pts
+        self.batch_size = None
+        self.l2_norm = l2_norm
+        self.margin = margin
+
+    def hybrid_forward(self, F, embeddings, labels):
+        total_start_time = time.time()
+        gen_time = 0
+        self.batch_size = embeddings.shape[0]
+        dim = embeddings.shape[1]
+        
+        pos_embed = embeddings[:self.batch_size // 2]
+        neg_embed = embeddings[self.batch_size // 2:]
+        
+        X1 = pos_embed[0:self.batch_size // 2:2]
+        X2 = pos_embed[1:self.batch_size // 2:2]
+        X3 = neg_embed[0:self.batch_size // 2:2]
+        X4 = neg_embed[1:self.batch_size // 2:2]
+        
+        sim=F.arccos(F.sum(X1*X2, axis = 1))
+        sim1=F.arccos(F.sum(X3*X4, axis = 1))
+        ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
+        ind1=[i for i in range(sim.shape[0]) if sim1[i]>1e-3]
+        ind1 = ind and ind1
+        
+        if len(ind1)>0:
+            X1 = X1[ind1]
+            X2 = X2[ind1]
+            X3 = X3[ind1]
+            X4 = X4[ind1]
+
+            gen_start_time = time.time()
+            dis_an = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), self.batch_size, dim)
+            dis_ap = F.sqrt(F.sum((X1-X2)*(X1-X2), axis = 1) + 1e-20)
+
+            gen_time = time.time() - gen_start_time
+
+            loss = F.sum(dis_ap - dis_an + self.margin)
+
+            total_time = time.time() - total_start_time
+        else:
+            loss = 
+
+        return loss    
