@@ -17,6 +17,8 @@ import csv
 import os
 
 from .embedding_aug_mx import  get_opt_emb_dis, get_min_dis, get_sum_exp_dis, euclidean_dist, pair_mining
+from .optimum_pts_rot import *
+from .optimum_pts_lin import *
 
 
 class HPHNTripletLoss(mx.gluon.loss.Loss):
@@ -198,11 +200,16 @@ class Tripletloss(mx.gluon.loss.Loss):
         X3 = neg_embed[0:self.batch_size // 2:2]
         X4 = neg_embed[1:self.batch_size // 2:2]
         
-        sim=F.arccos(F.sum(X1*X2, axis = 1))
-        sim1=F.arccos(F.sum(X3*X4, axis = 1))
-        ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
-        ind1=[i for i in range(sim.shape[0]) if sim1[i]>1e-3]
+        sim = F.arccos(F.sum(X1*X2, axis = 1))
+        sim1 = F.arccos(F.sum(X3*X4, axis = 1))
+        
+        con = sim>1e-3
+        con1 = sim1>1e-3
+        ind = F.contrib.boolean_mask(sim,con)
+        ind1 = F.contrib.boolean_mask(sim1,con1)
         ind1 = ind and ind1
+        
+        dis_ap = F.sqrt(F.sum((X1-X2)*(X1-X2), axis = 1) + 1e-20)
         
         if len(ind1)>0:
             X1 = X1[ind1]
@@ -211,15 +218,17 @@ class Tripletloss(mx.gluon.loss.Loss):
             X4 = X4[ind1]
 
             gen_start_time = time.time()
-            dis_an = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), self.batch_size, dim)
-            dis_ap = F.sqrt(F.sum((X1-X2)*(X1-X2), axis = 1) + 1e-20)
-
+            if self.l2_norm:
+                dis_an = opt_pts_rot(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4), self.batch_size, dim)
+            else:
+                dis_an = opt_pts_lin(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4))
             gen_time = time.time() - gen_start_time
-
-            loss = F.sum(dis_ap - dis_an + self.margin)
 
             total_time = time.time() - total_start_time
         else:
-            loss = 
+            dis_an = F.sqrt(F.sum((X1-X3)*(X1-X3), axis = 1) + 1e-20)
+            
+        loss = F.relu(dis_ap - dis_an + self.margin)     
+            
 
         return loss    
