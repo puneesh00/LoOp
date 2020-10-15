@@ -207,7 +207,7 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
           #dist_pos.attach_grad()
           #print('pos_none')
         
-        if F.sum(idc)==0 and len(idc1)<1 and len(idc2)<1:
+        if F.sum(idc)==0 and F.sum(idc1)==0 and F.sum(idc2)==0:
           continue
         
         if k==0:
@@ -247,16 +247,16 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
     #print('labelsorg shape', labelsorg.shape)
     if l2_norm:
       sim=F.arccos(F.sum(X1*X2, axis = 1))
-      ind=(sim>1e-3) #[i for i in range(sim.shape[0]) if sim[i]>1e-3]
+      ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
       indx=[]
     
       if F.sum(ind)>1:
-        indx=([i for i in range(len(labels)) if labels[i] in F.contrib.boolean_mask(X1l,ind)]
+        indx=[i for i in range(len(labels)) if labels[i] in X1l[ind]]
         if len(indx)>1:
-          X1=F.contrib.boolean_mask(X1,ind)
-          X2=F.contrib.boolean_mask(X2,ind)
-          X1l=F.contrib.boolean_mask(X1l,ind)
-          X2l=F.contrib.boolean_mask(X2l,ind)
+          X1=X1[ind]
+          X2=X2[ind]
+          X1l=X1l[ind]
+          X2l=X2l[ind]
       
       if len(ind)<2 or len(indx)<2:
         ind=[i for i in range(sim.shape[0])]
