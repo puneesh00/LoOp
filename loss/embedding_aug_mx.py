@@ -169,11 +169,11 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
       
       if F.sum(id1)>0 or F.sum(id2)>0:
         if F.sum(id1)<1:
-          idc1=F.zeros(F.sum(id2))
+          idc1=F.array([0.0]) #zeros(F.sum(id2))
           idc2=(F.contrib.boolean_mask(dis_an,id2)>(sim_pos-th)) #[i for i in range(len(id2)) if dis_an[id2][i]>(sim_pos-th)]
           sim_neg=F.max(F.contrib.boolean_mask(dis_an,id2))
         elif F.sum(id2)<1:
-          idc2=F.zeros(F.sum(id1))
+          idc2=F.array([0.0]) #zeros(F.sum(id1))
           idc1=(F.contrib.boolean_mask(dis_an,id1)>(sim_pos-th)) #[i for i in range(len(id1)) if dis_an[id1][i]>(sim_pos-th)]
           sim_neg=F.max(F.contrib.boolean_mask(dis_an,id1))
         else:
@@ -250,7 +250,7 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
       ind=[i for i in range(sim.shape[0]) if sim[i]>1e-3]
       indx=[]
     
-      if F.sum(ind)>1:
+      if len(ind)>1:
         indx=[i for i in range(len(labels)) if labels[i] in X1l[ind]]
         if len(indx)>1:
           X1=X1[ind]

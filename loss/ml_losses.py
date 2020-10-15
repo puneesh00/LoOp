@@ -142,7 +142,7 @@ class Npairloss(mx.gluon.loss.Loss):
         return loss
     
 class MSloss(mx.gluon.loss.Loss):
-    def __init__(self, th = 0.1, mrg = 0.5, alpha = 2.0, beta = 40.0, soft_margin=False, weight=None, batch_axis=0, num_instances=2, n_inner_pts=0, l2_norm=True):
+    def __init__(self, th = 0.1, mrg = 0.5, alpha = 2.0, beta = 50.0, soft_margin=False, weight=None, batch_axis=0, num_instances=2, n_inner_pts=0, l2_norm=True):
         super(MSloss, self).__init__(weight, batch_axis)
         self.soft_margin = soft_margin
         self.num_instance = num_instances
