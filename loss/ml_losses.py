@@ -170,7 +170,7 @@ class MSloss(mx.gluon.loss.Loss):
         dist_neg, dist_pos = pair_mining(F, dist_ap, dist_an0, ids, a1l, a2l, ind, labels, self.num_instance, self.th, self.alpha, self.beta, self.mrg)
         gen_time = time.time() - gen_start_time
 
-        loss = 1/(self.alpha)*F.log(1.0 + dist_pos) + 1/(self.beta)*F.log(dist_neg)
+        loss = 1/(self.alpha)*F.log(1.0 + dist_pos) + 1/(self.beta)*F.log(1.0 + dist_neg)
 
         total_time = time.time() - total_start_time
 
