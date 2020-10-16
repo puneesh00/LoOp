@@ -189,8 +189,8 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
           else:
             dist_neg=F.concat(F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id1),idc1), F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id2),idc2), dim=0)
           dist_neg=F.sum(F.exp(beta*(dist_neg-mrg)))
-        else:
-          dist_neg=F.array([1.0])
+        #else:
+        #  dist_neg=F.array([1.0])
           #dist_neg.attach_grad()
           #print('neg none')
         
@@ -202,12 +202,12 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
         if F.sum(idc)>0:
           dist_pos=F.contrib.boolean_mask(dist_pos,idc)
           dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
-        else:
-          dist_pos=F.array([0.0])
+        #else:
+        #  dist_pos=F.array([0.0])
           #dist_pos.attach_grad()
           #print('pos_none')
         
-        if F.sum(idc)==0 and F.sum(idc1)==0 and F.sum(idc2)==0:
+        if F.sum(idc)==0 or (F.sum(idc1)==0 and F.sum(idc2)==0):
           continue
         
         if k==0:
@@ -220,7 +220,7 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
           
     if k==0:
       dis_pos=sim_pos-sim_pos #F.array([0.0])
-      dis_neg=sim_pos-sim_pos+1 #F.array([1.0])
+      dis_neg=sim_pos-sim_pos #F.array([0.0])
       #dis_pos.attach_grad()
       #dis_neg.attach_grad()
       #print('both none')
