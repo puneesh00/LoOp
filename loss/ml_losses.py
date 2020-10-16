@@ -207,7 +207,7 @@ class Tripletloss(mx.gluon.loss.Loss):
         ind1 = sim1>1e-3
         ind1 = ind*ind1
             
-        if len(ind1)>0:
+        if F.sum(ind1)>0:
             X1 = F.contrib.boolean_mask(X1,ind1)
             X2 = F.contrib.boolean_mask(X2,ind1)
             X3 = F.contrib.boolean_mask(X3,ind1)
