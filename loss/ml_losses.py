@@ -203,19 +203,15 @@ class Tripletloss(mx.gluon.loss.Loss):
         sim = F.arccos(F.sum(X1*X2, axis = 1))
         sim1 = F.arccos(F.sum(X3*X4, axis = 1))
         
-        con = sim>1e-3
-        con1 = sim1>1e-3
-        ind = F.contrib.boolean_mask(sim,con)
-        ind1 = F.contrib.boolean_mask(sim1,con1)
+        ind = sim>1e-3
+        ind1 = sim1>1e-3
         ind1 = ind and ind1
-        
-        dis_ap = F.sqrt(F.sum((X1-X2)*(X1-X2), axis = 1) + 1e-20)
-        
+            
         if len(ind1)>0:
-            X1 = X1[ind1]
-            X2 = X2[ind1]
-            X3 = X3[ind1]
-            X4 = X4[ind1]
+            X1 = F.contrib.boolean_mask(X1,ind1)
+            X2 = F.contrib.boolean_mask(X2,ind1)
+            X3 = F.contrib.boolean_mask(X3,ind1)
+            X4 = F.contrib.boolean_mask(X4,ind1)
 
             gen_start_time = time.time()
             if self.l2_norm:
@@ -223,12 +219,11 @@ class Tripletloss(mx.gluon.loss.Loss):
             else:
                 dis_an = opt_pts_lin(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4))
             gen_time = time.time() - gen_start_time
-
-            total_time = time.time() - total_start_time
         else:
             dis_an = F.sqrt(F.sum((X1-X3)*(X1-X3), axis = 1) + 1e-20)
-            
-        loss = F.relu(dis_ap - dis_an + self.margin)     
-            
+        
+        dis_ap = F.sqrt(F.sum((X1-X2)*(X1-X2), axis = 1) + 1e-20)
+        loss = F.relu(dis_ap - dis_an + self.margin)
+        total_time = time.time() - total_start_time
 
         return loss    
