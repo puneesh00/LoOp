@@ -20,7 +20,7 @@ import argparse
 import dataset as D
 import transforms as T
 from model import Model
-from loss import HPHNTripletLoss, LiftedStructureLoss, Npairloss, MSloss
+from loss import HPHNTripletLoss, LiftedStructureLoss, Npairloss, MSloss, Tripletloss
 from runner import Trainer, Evaluator
 from util import SummaryWriter
 
@@ -88,7 +88,7 @@ parser.add_argument('--backbone', default='googlenet', type=str,
 parser.add_argument('--recallk', default='1,2,4,8', type=str,
                     help='k values for recall')
 parser.add_argument('--loss', default='hphn-triplet', type=str,
-                    help='hphn-triplet')
+                    help='hphn-triplet or msloss or triplet')
 parser.add_argument('--kvstore', default='device', type=str,
                     help='kvstore')
 
@@ -172,6 +172,8 @@ def main():
       loss = Npairloss(soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=False)
     elif args.loss == 'ms':
       loss = MSloss(soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.ee_l2norm)
+    elif args.loss == 'triplet':
+      loss = Tripletloss(margin=args.margin, soft_margin=False, num_instances=args.num_instances, n_inner_pts=args.n_inner_pts, l2_norm=args.ee_l2norm)
 
     # Load logger and saver
     summary_writer = SummaryWriter(os.path.join(args.save_dir, 'tensorboard_log'))
