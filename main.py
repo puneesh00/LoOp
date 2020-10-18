@@ -138,6 +138,9 @@ def main():
     elif args.data_name == 'CUB200':
       args.train_meta = './meta/CUB_200_2011/train.txt'
       args.test_meta = './meta/CUB_200_2011/test.txt'
+    elif args.data_name == 'SOP':
+      args.train_meta = './meta/SOP/train.txt'
+      args.test_meta = './meta/SOP/test.txt'
     
     args.lr_decay_epochs = [int(epoch) for epoch in args.lr_decay_epochs.split(',')]
     args.recallk = [int(k) for k in args.recallk.split(',')]
