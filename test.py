@@ -107,7 +107,10 @@ def evaluate_recall(features, labels, neighbours):
       feat1 = features[i*parts_x:(i+1)*parts_x]
       D = dist_mat(feat1, features)
       D = np.sqrt(np.abs(D))
-      diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
+      #diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
+      diagn = np.zeros((parts_x, dims[1]))
+      for k in range(parts_x):
+        diagn[k, (i*parts_x + k)] = float('inf')
       D = D + diagn
       lab = labels[i*parts_x:(i+1)*parts_x]
       for j in range(0, np.shape(neighbours)[0]):
