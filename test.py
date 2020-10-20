@@ -93,20 +93,32 @@ def evaluate_recall(features, labels, neighbours):
     :return: A 1-d array of the Recall@X
     """
     dims = features.shape
-    recalls = []
+    
     #D2 = distance_matrix(features)
-    D2 = dist_mat(features)
+
+    #D2 = dist_mat(features)
 
     # set diagonal to very high number
     num = dims[0]
-    D = np.sqrt(np.abs(D2))
-    diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
-    D = D + diagn
-    for i in range(0, np.shape(neighbours)[0]):
-        recall_i = compute_recall_at_K(D, neighbours[i], labels, num)
-        recalls.append(recall_i)
+    parts = 100
+    parts_x = num // parts
+    for i in range(parts):
+      recalls = []
+      feat1 = features[i*parts_x:(i+1)*parts_x]
+      D = dist_mat(feat1, features)
+      D = np.sqrt(np.abs(D))
+      diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
+      D = D + diagn
+      for j in range(0, np.shape(neighbours)[0]):
+          recall_i = compute_recall_at_K(D, neighbours[i], labels, num)
+          recalls.append(recall_i)
+      recall_i = np.array(recall_i)
+      if i==0:
+        RECALL = recall_i
+      else:
+        RECALL+=recall_i
     print('done')
-    return recalls
+    return RECALL
 
 def compute_recall_at_K(D, K, class_ids, num):
     num_correct = 0
@@ -135,10 +147,11 @@ def distance_matrix(X):
         x[i] = n * n
     D = x * np.transpose(t) + t * np.transpose(x) - 2 * X * np.transpose(X)
     return D
-  
-def dist_mat(features):
-  squared_sum_features = np.sum(features ** 2.0, axis=1, keepdims=True)
-  distmat = squared_sum_features + squared_sum_features.transpose() - (2.0 * np.dot(features, features.transpose())
+                                                                       
+def dist_mat(X, features):
+  squared_X = np.sum(X**2.0, axis=1, keepdims=True) 
+  squared_f = np.sum(features**2.0, axis=1, keepdims=True)
+  distmat = squared_X + squared_f.transpose() - (2.0 * np.dot(X, features.tranpose()))                                                                    
   return distmat
                                                                        
 def compute_clutering_metric(idx, item_ids):
