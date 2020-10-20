@@ -108,21 +108,36 @@ def evaluate_recall(features, labels, neighbours):
       D = dist_mat(feat1, features)
       D = np.sqrt(np.abs(D))
       #diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
-      diagn = np.zeros((parts_x, dims[1]))
+      diagn = np.zeros((parts_x, num))
       for k in range(parts_x):
         diagn[k, (i*parts_x + k)] = float('inf')
       D = D + diagn
       lab = labels[i*parts_x:(i+1)*parts_x]
       for j in range(0, np.shape(neighbours)[0]):
-          recall_i = compute_recall_at_K(D, neighbours[i], lab, labels, parts_x)
+          recall_i = compute_recall_at_K(D, neighbours[j], lab, labels, parts_x)
           recalls.append(recall_i)
       recalls = np.array(recalls)
       if i==0:
-        RECALL = recalls
+        RECALL = recalls/float(num)*float(parts_x)
       else:
-        RECALL+=recalls
+        RECALL+=recalls/float(num)*float(parts_x)
+
+    feat = features[(i+1)*parts_x:num]
+    D = dist_mat(feat, features)
+    diagn = np.zeros((D.shape[0], num))
+    for k in range(D.shape[0]):
+       diagn[k, ((i+1)*parts_x+k)] = float('inf')
+    D = D + diagn
+    lab = labels[(i+1)*parts_x:num]
+    recalls = []  
+    for j in range(0,np.shape(neighbours)[0]):
+        recall_i = compute_recall_at_K(D, neighbours[j], lab, labels, D.shape[0])
+        recalls.append(recall_i)
+    recalls = np.array(recalls)
+    RECALL+=recalls/float(num)*float(D.shape[0])
 
     print('done')
+    print(RECALL)
     return RECALL
 
 def compute_recall_at_K(D, K, lab, class_ids, num):
@@ -157,7 +172,7 @@ def distance_matrix(X):
 def dist_mat(X, features):
   squared_X = np.sum(X**2.0, axis=1, keepdims=True) 
   squared_f = np.sum(features**2.0, axis=1, keepdims=True)
-  distmat = squared_X + squared_f.transpose() - (2.0 * np.dot(X, features.tranpose()))                                                                    
+  distmat = squared_X + squared_f.transpose() - (2.0 * np.dot(X, features.transpose()))                                                                    
   return distmat
 
                                                                        
