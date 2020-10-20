@@ -109,8 +109,9 @@ def evaluate_recall(features, labels, neighbours):
       D = np.sqrt(np.abs(D))
       diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
       D = D + diagn
+      lab = labels[i*parts_x:(i+1)*parts_x]
       for j in range(0, np.shape(neighbours)[0]):
-          recall_i = compute_recall_at_K(D, neighbours[i], labels, num)
+          recall_i = compute_recall_at_K(D, neighbours[i], lab, labels, parts_x)
           recalls.append(recall_i)
       recall_i = np.array(recall_i)
       if i==0:
@@ -120,10 +121,10 @@ def evaluate_recall(features, labels, neighbours):
     print('done')
     return RECALL
 
-def compute_recall_at_K(D, K, class_ids, num):
+def compute_recall_at_K(D, K, lab, class_ids, num):
     num_correct = 0
     for i in range(0, num):
-        this_gt_class_idx = class_ids[i]
+        this_gt_class_idx = lab[i]
         this_row = D[i, :]
         inds = np.array(np.argsort(this_row))[0]
         knn_inds = inds[0:K]
