@@ -93,25 +93,42 @@ def evaluate_recall(features, labels, neighbours):
     :return: A 1-d array of the Recall@X
     """
     dims = features.shape
-    recalls = []
+ 
+    #D2 = distance_matrix(features)
 
-    D = dist_mat(features)
+    #D2 = dist_mat(features)
 
     # set diagonal to very high number
     num = dims[0]
-    D = np.sqrt(np.abs(D))
-    diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
-    D = D + diagn
-    for i in range(0, np.shape(neighbours)[0]):
-        recall_i = compute_recall_at_K(D, neighbours[i], labels, num)
-        recalls.append(recall_i)
-    print('done')
-    return recalls
+    parts = 100
+    parts_x = num // parts
+    for i in range(parts):
+      recalls = []
+      feat1 = features[i*parts_x:(i+1)*parts_x]
+      D = dist_mat(feat1, features)
+      D = np.sqrt(np.abs(D))
+      #diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
+      diagn = np.zeros((parts_x, dims[1]))
+      for k in range(parts_x):
+        diagn[k, (i*parts_x + k)] = float('inf')
+      D = D + diagn
+      lab = labels[i*parts_x:(i+1)*parts_x]
+      for j in range(0, np.shape(neighbours)[0]):
+          recall_i = compute_recall_at_K(D, neighbours[i], lab, labels, parts_x)
+          recalls.append(recall_i)
+      recalls = np.array(recalls)
+      if i==0:
+        RECALL = recalls
+      else:
+        RECALL+=recalls
 
-def compute_recall_at_K(D, K, class_ids, num):
+    print('done')
+    return RECALL
+
+def compute_recall_at_K(D, K, lab, class_ids, num):
     num_correct = 0
     for i in range(0, num):
-        this_gt_class_idx = class_ids[i]
+        this_gt_class_idx = lab[i]
         this_row = D[i, :]
         inds = np.array(np.argsort(this_row))
         knn_inds = inds[0:K]
@@ -135,11 +152,14 @@ def distance_matrix(X):
         x[i] = n * n
     D = x * np.transpose(t) + t * np.transpose(x) - 2 * X * np.transpose(X)
     return D
-  
-def dist_mat(features):
-    squared_sum_features = np.sum(features ** 2.0, axis=1, keepdims=True)
-    distmat = squared_sum_features + squared_sum_features.transpose() - (2.0 * np.dot(features, features.transpose()))
-    return distmat
+
+                                                                       
+def dist_mat(X, features):
+  squared_X = np.sum(X**2.0, axis=1, keepdims=True) 
+  squared_f = np.sum(features**2.0, axis=1, keepdims=True)
+  distmat = squared_X + squared_f.transpose() - (2.0 * np.dot(X, features.tranpose()))                                                                    
+  return distmat
+
                                                                        
 def compute_clutering_metric(idx, item_ids):
 
