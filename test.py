@@ -94,12 +94,12 @@ def evaluate_recall(features, labels, neighbours):
     """
     dims = features.shape
     recalls = []
-    #D2 = distance_matrix(features)
-    D2 = dist_mat(features)
+
+    D = dist_mat(features)
 
     # set diagonal to very high number
     num = dims[0]
-    D = np.sqrt(np.abs(D2))
+    D = np.sqrt(np.abs(D))
     diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
     D = D + diagn
     for i in range(0, np.shape(neighbours)[0]):
@@ -113,7 +113,7 @@ def compute_recall_at_K(D, K, class_ids, num):
     for i in range(0, num):
         this_gt_class_idx = class_ids[i]
         this_row = D[i, :]
-        inds = np.array(np.argsort(this_row))[0]
+        inds = np.array(np.argsort(this_row))
         knn_inds = inds[0:K]
         knn_class_inds = [class_ids[i] for i in knn_inds]
         if sum(np.in1d(knn_class_inds, this_gt_class_idx)) > 0:
@@ -137,9 +137,9 @@ def distance_matrix(X):
     return D
   
 def dist_mat(features):
-  squared_sum_features = np.sum(features ** 2.0, axis=1, keepdims=True)
-  distmat = squared_sum_features + squared_sum_features.transpose() - (2.0 * np.dot(features, features.transpose())
-  return distmat
+    squared_sum_features = np.sum(features ** 2.0, axis=1, keepdims=True)
+    distmat = squared_sum_features + squared_sum_features.transpose() - (2.0 * np.dot(features, features.transpose()))
+    return distmat
                                                                        
 def compute_clutering_metric(idx, item_ids):
 
