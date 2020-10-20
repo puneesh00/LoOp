@@ -94,7 +94,8 @@ def evaluate_recall(features, labels, neighbours):
     """
     dims = features.shape
     recalls = []
-    D2 = distance_matrix(features)
+    #D2 = distance_matrix(features)
+    D2 = dist_mat(features)
 
     # set diagonal to very high number
     num = dims[0]
@@ -134,7 +135,12 @@ def distance_matrix(X):
         x[i] = n * n
     D = x * np.transpose(t) + t * np.transpose(x) - 2 * X * np.transpose(X)
     return D
-
+  
+def dist_mat(features):
+  squared_sum_features = np.sum(features ** 2.0, axis=1, keepdims=True)
+  distmat = squared_sum_features + squared_sum_features.transpose() - (2.0 * np.dot(features, features.transpose())
+  return distmat
+                                                                       
 def compute_clutering_metric(idx, item_ids):
 
     N = len(idx)
@@ -255,15 +261,15 @@ evaluator = Evaluator(model, test_loader, args.ctx)
 
 feats, labels = evaluator.get_feats()
 
-nmi,f1=evaluate_cluster(feats,labels,n_clusters)
-print(nmi,f1)
+#nmi,f1=evaluate_cluster(feats,labels,n_clusters)
+#print(nmi,f1)
 
 recall=evaluate_recall(feats,labels,args.recallk)
 
-distmat, labels = evaluator.get_distmat()
-recall_at_ranks = evaluator.get_metric_at_ranks(distmat, labels, args.recallk)
+#distmat, labels = evaluator.get_distmat()
+#recall_at_ranks = evaluator.get_metric_at_ranks(distmat, labels, args.recallk)
 
-for recallk, recall in zip(args.recallk, recall_at_ranks):
-    print("R@{:3d}: {:.4f}".format(recallk, recall))
+#for recallk, recall in zip(args.recallk, recall_at_ranks):
+#    print("R@{:3d}: {:.4f}".format(recallk, recall))
 
 
