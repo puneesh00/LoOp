@@ -113,11 +113,11 @@ def evaluate_recall(features, labels, neighbours):
       for j in range(0, np.shape(neighbours)[0]):
           recall_i = compute_recall_at_K(D, neighbours[i], lab, labels, parts_x)
           recalls.append(recall_i)
-      recall_i = np.array(recall_i)
+      recalls = np.array(recalls)
       if i==0:
-        RECALL = recall_i
+        RECALL = recalls
       else:
-        RECALL+=recall_i
+        RECALL+=recalls
     print('done')
     return RECALL
 
