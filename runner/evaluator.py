@@ -30,6 +30,17 @@ class Evaluator(object):
             feats.append(self.model(d))
         feats = mx.nd.concatenate(feats, axis=0)
         return feats, instance_ids, view_ids
+        
+    def get_feats(self):
+        print('Extracting eval features...')
+        features, labels = [], []
+        for batch_idx, inputs in tqdm(enumerate(self.test_loader), total=len(self.test_loader)):
+            feature, instance_ids, view_ids = self._eval_step(inputs)
+            features.append(feature.asnumpy())
+            labels.extend(instance_ids)
+        features = np.concatenate(features)
+        labels = np.asarray(labels)
+        return features, labels
 
     
     def get_distmat(self):
