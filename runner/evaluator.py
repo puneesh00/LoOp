@@ -88,3 +88,82 @@ class Evaluator(object):
             recall_at_ranks.append(recall_dict[r] / len(distmat))
 
         return recall_at_ranks
+    
+    def evaluate_recall(features, labels, neighbours):
+        """
+        A function that calculate the recall score of a embedding
+        :param features: The 2-d array of the embedding
+        :param labels: The 1-d array of the label
+        :param neighbours: A 1-d array contains X in Recall@X
+        :return: A 1-d array of the Recall@X
+        """
+        dims = features.shape
+ 
+        #D2 = distance_matrix(features)
+
+        #D2 = dist_mat(features)
+
+        # set diagonal to very high number
+        num = dims[0]
+        parts = 100
+        parts_x = num // parts
+        for i in range(parts):
+          recalls = []
+          feat1 = features[i*parts_x:(i+1)*parts_x]
+          D = dist_mat(feat1, features)
+          D = np.sqrt(np.abs(D))
+          #diagn = np.diag([float('inf') for i in range(0, D.shape[0])])
+          diagn = np.zeros((parts_x, num))
+          for k in range(parts_x):
+            diagn[k, (i*parts_x + k)] = float('inf')
+          D = D + diagn
+          lab = labels[i*parts_x:(i+1)*parts_x]
+          for j in range(0, np.shape(neighbours)[0]):
+              recall_i = compute_recall_at_K(D, neighbours[j], lab, labels, parts_x)
+              recalls.append(recall_i)
+          recalls = np.array(recalls)
+          if i==0:
+            RECALL = recalls/float(num)*float(parts_x)
+          else:
+            RECALL+=recalls/float(num)*float(parts_x)
+
+        feat = features[(i+1)*parts_x:num]
+        D = dist_mat(feat, features)
+        diagn = np.zeros((D.shape[0], num))
+        for k in range(D.shape[0]):
+           diagn[k, ((i+1)*parts_x+k)] = float('inf')
+        D = D + diagn
+        lab = labels[(i+1)*parts_x:num]
+        recalls = []  
+        for j in range(0,np.shape(neighbours)[0]):
+            recall_i = compute_recall_at_K(D, neighbours[j], lab, labels, D.shape[0])
+            recalls.append(recall_i)
+        recalls = np.array(recalls)
+        RECALL+=recalls/float(num)*float(D.shape[0])
+
+        print('done')
+        print(RECALL)
+        return RECALL
+
+    def compute_recall_at_K(D, K, lab, class_ids, num):
+        num_correct = 0
+        for i in range(0, num):
+            this_gt_class_idx = lab[i]
+            this_row = D[i, :]
+            inds = np.array(np.argsort(this_row))
+            knn_inds = inds[0:K]
+            knn_class_inds = [class_ids[i] for i in knn_inds]
+            if sum(np.in1d(knn_class_inds, this_gt_class_idx)) > 0:
+                num_correct = num_correct + 1
+        recall = float(num_correct)/float(num)
+
+        print('num_correct:', num_correct)
+        print('num:', num)
+        print("K: %d, Recall: %.4f\n" % (K, recall))
+        return recall
+    
+    def dist_mat(X, features):
+      squared_X = np.sum(X**2.0, axis=1, keepdims=True) 
+      squared_f = np.sum(features**2.0, axis=1, keepdims=True)
+      distmat = squared_X + squared_f.transpose() - (2.0 * np.dot(X, features.transpose()))                                                                    
+      return distmat
