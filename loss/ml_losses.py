@@ -144,7 +144,7 @@ class Npairloss(mx.gluon.loss.Loss):
         return loss
     
 class MSloss(mx.gluon.loss.Loss):
-    def __init__(self, th = 0.1, mrg = 0.5, alpha = 2.0, beta = 50.0, soft_margin=False, weight=None, batch_axis=0, num_instances=2, n_inner_pts=0, l2_norm=True):
+    def __init__(self, th = -0.02, mrg = 0.4, alpha = 2.0, beta = 50.0, soft_margin=False, weight=None, batch_axis=0, num_instances=2, n_inner_pts=0, l2_norm=True):
         super(MSloss, self).__init__(weight, batch_axis)
         self.soft_margin = soft_margin
         self.num_instance = num_instances
@@ -160,19 +160,63 @@ class MSloss(mx.gluon.loss.Loss):
         total_start_time = time.time()
         gen_time = 0
         self.batch_size = embeddings.shape[0]
-
+        count = 0
+        
         gen_start_time = time.time()
         dist_ap, dist_an0, ids, a1l, a2l, ind = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm, multisim = True)
-        print(dist_ap)
-        print(dist_an0)
+        #print('DISTANCES...')
+        #print(dist_ap)
+        #print(dist_an0)
         dist_ap = (2-dist_ap**2)/2.0
         dist_an0 = (2 -dist_an0**2)/2.0
         dist_neg, dist_pos = pair_mining(F, dist_ap, dist_an0, ids, a1l, a2l, ind, labels, self.num_instance, self.th, self.alpha, self.beta, self.mrg)
         gen_time = time.time() - gen_start_time
+        
+        ''' 
+        sim_mat = F.linalg.gemm2(embeddings, F.transpose(embeddings))
+        #print(labels, labels.shape) 
 
+        epsilon = 1e-5
+        #loss = list()
+        k=0
+
+        for i in range(self.batch_size):
+            pos_pair_ = F.contrib.boolean_mask(sim_mat[i],labels == labels[i])
+            pos_pair_ = F.contrib.boolean_mask(pos_pair_,pos_pair_ < 1 - epsilon)
+            neg_pair_ = F.contrib.boolean_mask(sim_mat[i],labels != labels[i])
+            
+            ind_neg=neg_pair_ + self.th > F.min(pos_pair_)
+            ind_pos=pos_pair_ - self.th < F.max(neg_pair_)
+            if F.sum(ind_neg) < 1 or F.sum(ind_pos) < 1:
+                count = count + 1
+                continue
+
+            neg_pair = F.contrib.boolean_mask(neg_pair_,ind_neg)
+            pos_pair = F.contrib.boolean_mask(pos_pair_,ind_pos)
+
+            #print('NEG...', neg_pair)
+            #print('POS...', pos_pair)  
+            # weighting step
+            dis_pos= F.sum(F.exp(-self.alpha * (pos_pair - self.mrg)))
+            dis_neg = F.sum(F.exp(self.beta * (neg_pair - self.mrg)))
+            #loss.append(pos_loss + neg_loss)
+            if k==0:
+              k=k+1
+              dist_pos=dis_pos
+              dist_neg=dis_neg
+            else:
+              dist_pos=F.concat(dist_pos,dis_pos,dim=0)
+              dist_neg=F.concat(dist_neg,dis_neg,dim=0)
+
+        if k==0:
+          dist_pos=pos_pair_-pos_pair_
+          dist_neg=dist_pos
+       
+        #print('MEASURE OF emptiness...', float(count)/float(self.batch_size))
+        '''
         loss = 1/(self.alpha)*F.log(1.0 + dist_pos) + 1/(self.beta)*F.log(1.0 + dist_neg)
 
-        total_time = time.time() - total_start_time
+        #total_time = time.time() - total_start_time
 
         return loss    
 

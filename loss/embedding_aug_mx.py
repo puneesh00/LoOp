@@ -155,18 +155,29 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
     N = dis_ap.shape[0]
     is_pos = F.equal(labels.broadcast_to((N, N)), labels.broadcast_to((N, N)).T).astype('float32')
     id_mat = F.repeat(F.expand_dims(F.repeat(F.array([i for i in range(N//2)]), 2), axis=1), N, axis=1)
-    
+    #print(id_mat)
+    count = 0
     for l in range(len(ids)):
       id1=(a1l==ids[l]) #[i for i in range(a1l.shape[0]) if a1l[i]==ids[l] ]
       id2=(a2l==ids[l]) #[i for i in range(a2l.shape[0]) if a2l[i]==ids[l] ]
       is_id=(id_mat==ind[l])
-      sim_pair=F.min(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id),axis=1)
-      sim_pair=F.contrib.boolean_mask(sim_pair,(sim_pair<1000))
+      #print((is_id*is_pos)[0])
+      #sim_pair=F.min(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id),axis=1)
+      sim_pair = F.contrib.boolean_mask(dis_ap.reshape(-1), (is_pos*is_id).reshape(-1))
+      #print(sim_pair, sim_pair.shape, N)
+      div  = N // num_ins
+      sim_pair = F.reshape(sim_pair, (2, N//div))
+      #print(sim_pair)
+      #sim_pair=F.contrib.boolean_mask(sim_pair,(sim_pair<1000))
+      sim_pair = F.min(sim_pair, axis = 1)
+      #print(sim_pair)
+      #print(id1, id2)
       if sim_pair[0]==sim_pair[1]:
         sim_pos=sim_pair[0]
       else:
         sim_pos=F.min(sim_pair)
-      
+      #print(sim_pos)
+
       if F.sum(id1)>0 or F.sum(id2)>0:
         if F.sum(id1)<1:
           idc1=F.array([0.0]) #zeros(F.sum(id2))
@@ -180,7 +191,10 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
           idc1=(F.contrib.boolean_mask(dis_an,id1)>(sim_pos-th)) #[i for i in range(len(id1)) if dis_an[id1][i]>(sim_pos-th)]
           idc2=(F.contrib.boolean_mask(dis_an,id2)>(sim_pos-th)) #[i for i in range(len(id2)) if dis_an[id2][i]>(sim_pos-th)]
           sim_neg=F.max(F.concat(F.max(F.contrib.boolean_mask(dis_an,id1)), F.max(F.contrib.boolean_mask(dis_an,id2)), dim=0))
-        
+
+        #print('PRINTING Neg...', dis_an)
+        #print(idc1, idc2)
+
         if F.sum(idc1)>0 or F.sum(idc2)>0:
           if F.sum(idc1)<1:
             dist_neg=F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id2),idc2)
@@ -188,6 +202,7 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
             dist_neg=F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id1),idc1)
           else:
             dist_neg=F.concat(F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id1),idc1), F.contrib.boolean_mask(F.contrib.boolean_mask(dis_an,id2),idc2), dim=0)
+          #print('Printing Neg pairs...', dist_neg)  
           dist_neg=F.sum(F.exp(beta*(dist_neg-mrg)))
         #else:
         #  dist_neg=F.array([1.0])
@@ -196,11 +211,17 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
         
         dist_pos=(dis_ap*is_pos*is_id+1000*(1-is_pos*is_id)).reshape(-1)
         dist_pos=F.contrib.boolean_mask(dist_pos,(dist_pos<1000))
-        idce=[i for i in range(len(dist_pos)-num_ins+1) if dist_pos[i]!=dist_pos[i+num_ins-1]]
+        #print('PRINTING POS...')
+        #print(dist_pos) 
+        idce=[i for i in range(len(dist_pos)-num_ins+1) if dist_pos[i]!=dist_pos[i+num_ins-1]]+[i for i in range(len(dist_pos)-num_ins+1,len(dist_pos))]
         dist_pos=dist_pos[idce]
-        idc=dist_pos<(sim_neg+th)
+        #print(dist_pos)
+        #print(dist_pos<(sim_neg+th))
+        idc=(dist_pos<(sim_neg+th))*(dist_pos<1.0-1e-8)
+        #print(idc)
         if F.sum(idc)>0:
           dist_pos=F.contrib.boolean_mask(dist_pos,idc)
+          #print(dist_pos)
           dist_pos=F.sum(F.exp(-alpha*(dist_pos-mrg)))
         #else:
         #  dist_pos=F.array([0.0])
@@ -208,6 +229,7 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
           #print('pos_none')
         
         if F.sum(idc)==0 or (F.sum(idc1)==0 and F.sum(idc2)==0):
+          count = count + 1
           continue
         
         if k==0:
@@ -228,6 +250,7 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
     #print(dis_pos)
     #print(dis_neg)
 
+    #print('COUNT FOR emptiness per pair...', float(count)/float(len(ids)))
     return dis_neg, dis_pos
     
 
@@ -259,6 +282,8 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
           X2l=X2l[ind]
       
       if len(ind)<2 or len(indx)<2:
+        print('============================YESS=======================================')
+        print('Similarities...', sim) 
         ind=[i for i in range(sim.shape[0])]
     
       if num_instance==2:
@@ -291,6 +316,12 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
     #dis_an = get_sum_exp_dis(F, -dis, ids, a1l, a2l) #for n-pair
     
     if multisim:
-      return dis_ap1, dis, ids, a1l, a2l, ind 
+      #print('Returned by embed_opt...')
+      #print('DIS AP', dis_ap1)
+      #print('DIS AN', dis) 
+      #print('IDs', ids)
+      #print('Al', a1l, a2l)
+      #print('ind', ind)
+      return dis_ap1, dis, ids, a1l, a2l, ind  
     else:
       return dis_ap1, dis, ids, a1l, a2l  
