@@ -106,11 +106,16 @@ def add_summary(summary_writer, step, epoch, ranks, recall_at_ranks):
             summary_writer.add_scalar('metric_epoch/R%d' % (recallk), recall, epoch)
         print("R@{:3d}: {:.4f}".format(recallk, recall))
 
-def evaluate_and_log(summary_writer, evaluator, ranks, step, epoch, best_metrics):
+def evaluate_and_log(summary_writer, evaluator, ranks, step, epoch, best_metrics, data_name):
     metrics = []
+    if data_name=='SOP':
+        features, labels = evaluator.get_feats()
+        recall_at_ranks = evaluator.evaluate_recall(features, labels, ranks)
+        recall_at_ranks = recall_at_ranks.tolist()
 
-    distmat, labels = evaluator.get_distmat()
-    recall_at_ranks = evaluator.get_metric_at_ranks(distmat, labels, ranks)
+    else:
+        distmat, labels = evaluator.get_distmat()
+        recall_at_ranks = evaluator.get_metric_at_ranks(distmat, labels, ranks)
 
     add_summary(summary_writer, step, epoch, ranks, recall_at_ranks)
 
@@ -215,7 +220,7 @@ def main():
             # evaluate_and_log(summary_writer, evaluator, ranks, step, epoch, best_metrics)
             best_metrics = evaluate_and_log(summary_writer, evaluator, args.recallk,
                                         global_step, epoch + 1,
-                                        best_metrics=best_metrics)
+                                        best_metrics=best_metrics, args.data_name)
             if best_metrics[0] != old_best_metric:
                 save_path = os.path.join(args.save_dir, 'model_epoch_%05d.params' % (epoch + 1))
                 model.save_parameters(save_path)
