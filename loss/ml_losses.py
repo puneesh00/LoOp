@@ -133,11 +133,18 @@ class Npairloss(mx.gluon.loss.Loss):
         self.batch_size = embeddings.shape[0]
 
         gen_start_time = time.time()
-        dist_ap, dist_an0, ids, a1l, a2l = get_opt_emb_dis(F, embeddings, labels, self.num_instance, self.l2_norm)
-        dist_an = get_sum_exp_dis(F, -dist_an0, ids, a1l, a2l)
+        dist_ap, dist_an0, ids, a1l, a2l = get_opt_emb_dis(F, embeddings, labels, self.num_instance, l2_norm=False,npair=True )
+        dist_an, numf = get_sum_exp_dis(F, -dist_an0, ids, a1l, a2l)
+        print(dist_an)
+        print(F.exp(-dist_ap))
         gen_time = time.time() - gen_start_time
+        
+        X1=embeddings[0:self.batch_size:2]
+        X2=embeddings[1:self.batch_size:2]
+        l2_reg=F.sum(X1*X1, axis = 1)+F.sum(X2*X2, axis = 1)
+        print(F.sqrt(F.sum((X1-X2)**2, axis = 1)))
 
-        loss = F.log(1.0 + F.exp(-dist_ap)*dist_an)
+        loss = F.log(1.0 + F.exp(-dist_ap)*dist_an) #+ 0.000075*l2_reg
 
         total_time = time.time() - total_start_time
 

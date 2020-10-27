@@ -113,24 +113,29 @@ def get_min_dis(F, dis0,label,a1l,a2l):
 def get_sum_exp_dis(F, dis0,label,a1l,a2l):
     k=0
     for l in range(label.shape[0]):
-      id1=[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
-      id2=[i for i in range(a2l.shape[0]) if a2l[i]==label[l] ]
+      id1=(a1l==label[l]) #[i for i in range(a1l.shape[0]) if a1l[i]==label[l] ]
+      id2=(a2l==label[l]) #[i for i in range(a2l.shape[0]) if a2l[i]==label[l] ]
       
-      if len(id1)>0 or len(id2)>0:
-        if len(id1)<1:
-          dist=F.sum(F.exp(-dis0[id2]))
-        elif len(id2)<1:
-          dist=F.sum(F.exp(-dis0[id1]))
+      if F.sum(id1)>0 or F.sum(id2)>0:
+        if F.sum(id1)<1:
+          dist=F.sum(F.exp(-F.contrib.boolean_mask(dis0,id2)))
+          num=F.sum(id2)
+        elif F.sum(id2)<1:
+          dist=F.sum(F.exp(-F.contrib.boolean_mask(dis0,id1)))
+          num=F.sum(id1)
         else:
-          dist=F.sum(F.concat(F.sum(F.exp(-dis0[id1])), F.sum(F.exp(-dis0[id2])), dim=0))
+          dist=F.sum(F.concat(F.sum(F.exp(-F.contrib.boolean_mask(dis0,id1))), F.sum(F.exp(-F.contrib.boolean_mask(dis0,id2))), dim=0))
+          num=F.sum(id1)+F.sum(id2)
         
         if k==0:
           k=k+1
           dis=dist
+          numf=num
         else:
           dis=F.concat(dis,dist,dim=0)
+          numf=F.concat(numf,num,dim=0)
         
-    return dis
+    return dis,numf
 
 def get_pos_dis(F, dis_ap, labelsorg):
     N = dis_ap.shape[0]
@@ -252,9 +257,27 @@ def pair_mining(F, dis_ap, dis_an, ids, a1l, a2l, ind, labels, num_ins, th, alph
 
     #print('COUNT FOR emptiness per pair...', float(count)/float(len(ids)))
     return dis_neg, dis_pos
-    
 
-def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=False):
+
+def check_corners(F,X1,X2,X3,X4):
+    dis13=F.expand_dims(F.sum(X1*X3, axis=0),axis=1)
+    dis14=F.expand_dims(F.sum(X1*X4, axis=0),axis=1)
+    dis23=F.expand_dims(F.sum(X2*X3, axis=0),axis=1)
+    dis24=F.expand_dims(F.sum(X2*X4, axis=0),axis=1)
+    
+    dis1=dis13+7*(F.sign(dis13-dis14)**2-1+F.sign(dis13-dis23)**2-1+F.sign(dis13-dis24)**2-1)
+    dis2=dis14+8*(F.sign(dis14-dis23)**2-1+F.sign(dis14-dis24)**2-1)
+    dis3=dis23+9*(F.sign(dis23-dis24)**2-1)
+    dis4=dis24
+    
+    dis=F.concat(dis1,dis2,dis3,dis4,dim=1)
+    #print(dis)
+    dis=F.max(dis,axis=1)
+    #print(dis)
+    return dis
+ 
+
+def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=False, npair=False):
     batch_size = embeddings.shape[0]
     dim=embeddings.shape[1]
 
@@ -282,8 +305,8 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
           X2l=X2l[ind]
       
       if len(ind)<2 or len(indx)<2:
-        print('============================YESS=======================================')
-        print('Similarities...', sim) 
+        #print('============================YESS=======================================')
+        #print('Similarities...', sim) 
         ind=[i for i in range(sim.shape[0])]
     
       if num_instance==2:
@@ -297,7 +320,10 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
           print('dis_ap', dis_ap1)
         
     else:
-      dis_ap1 = F.sum(X1*X2, axis=1) #num_ins=2 for n-pair
+      if npair:
+        dis_ap1 = F.sum(X1*X2, axis=1) #num_ins=2 for n-pair
+      else:
+        dis_ap1 = F.sqrt(F.sum((X1-X2)*(X1-X2), axis=1)+1e-20)
     
     X1, X2, X3, X4, a1l, a2l, ids = concat(F,X1,X2,X1l,X2l)
     
@@ -309,6 +335,9 @@ def get_opt_emb_dis(F, embeddings, labels, num_instance, l2_norm=True, multisim=
         dis = F.sqrt(F.sum((X1-X3)*(X1-X3), axis=1)+1e-20)
         
     else:
+      if npair:
+        dis = check_corners(F,F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4))
+      else:
         dis = opt_pts_lin(F.transpose(X1), F.transpose(X2), F.transpose(X3), F.transpose(X4))
     
     #dis_an = get_min_dis(F, dis, ids, a1l, a2l) #for hphn-triplet

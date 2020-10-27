@@ -220,7 +220,7 @@ def main():
             # evaluate_and_log(summary_writer, evaluator, ranks, step, epoch, best_metrics)
             best_metrics = evaluate_and_log(summary_writer, evaluator, args.recallk,
                                         global_step, epoch + 1,
-                                        best_metrics=best_metrics, args.data_name)
+                                        best_metrics=best_metrics, data_name=args.data_name)
             if best_metrics[0] != old_best_metric:
                 save_path = os.path.join(args.save_dir, 'model_epoch_%05d.params' % (epoch + 1))
                 model.save_parameters(save_path)
