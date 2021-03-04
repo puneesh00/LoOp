@@ -15,6 +15,7 @@ import math
 from scipy.special import comb
 from sklearn import cluster
 from sklearn import neighbors
+from sklearn.decomposition import PCA
 import copy
 from tqdm import tqdm
 
@@ -298,6 +299,31 @@ feats, labels = evaluator.get_feats()
 
 #nmi,f1=evaluate_cluster(feats,labels,n_clusters)
 #print(nmi,f1)
+pca1 = PCA(n_components=3)
+pca2 = PCA(n_components=3)
+pca3 = PCA(n_components=3)
+pca4 = PCA(n_components=3)
+
+lab = np.asarray(labels)
+ind1 = np.squeeze(np.argwhere(lab==1))
+ind2 = np.squeeze(np.argwhere(lab==2))
+ind3 = np.squeeze(np.argwhere(lab==3))
+ind4 = np.squeeze(np.argwhere(lab==4))
+
+feat1 = feats[ind1]
+feat2 = feats[ind2]
+feat3 = feats[ind3]
+feat4 = feats[ind4]
+
+pca1.fit(feat1)
+pca2.fit(feat2)
+pca3.fit(feat3)
+pca4.fit(feat4)
+
+print(pca1.singular_values_)
+print(pca2.singular_values_)
+print(pca3.singular_values_)
+print(pca4.singular_values_)
 
 recall=evaluate_recall(feats,labels,args.recallk)
 
