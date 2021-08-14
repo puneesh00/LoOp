@@ -1,3 +1,6 @@
+# LoOp: Looking for Optimal Hard Negative Embeddings for Deep Metric Learning
+**Bhavya Vasudeva\*, Puneesh Deora\*, Saumik Bhattacharya, Umapada Pal, Sukalpa Chanda** (* Authors contributed equally.)
+
 <!---
 your comment goes here
 and here
